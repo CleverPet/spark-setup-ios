@@ -14,7 +14,7 @@
 #import "SparkSetupPasswordEntryViewController.h"
 #import "SparkSetupCustomization.h"
 #ifdef ANALYTICS
-#import <SEGAnalytics.h>
+#import <Mixpanel.h>
 #endif
 
 @interface SparkManualNetworkViewController () <UITextFieldDelegate>
@@ -28,23 +28,12 @@
 
 @implementation SparkManualNetworkViewController
 
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
-}
-
-
-
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     // move to super viewdidload?
     self.brandImageView.image = [SparkSetupCustomization sharedInstance].brandImage;
     self.brandImageView.backgroundColor = [SparkSetupCustomization sharedInstance].brandImageBackgroundColor;
-    
-    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
-    [self.backButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
-
     
     // Trick to add an inset from the left of the text fields
     CGRect  viewRect = CGRectMake(0, 0, 10, 32);
@@ -62,8 +51,7 @@
     self.wifiSymbolImageView.tintColor = [SparkSetupCustomization sharedInstance].normalTextColor;// elementBackgroundColor;;
 
     self.backButton.imageView.image = [self.backButton.imageView.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    self.backButton.imageView.tintColor = [SparkSetupCustomization sharedInstance].normalTextColor;// elementBackgroundColor;;
-    
+    self.backButton.tintColor = [SparkSetupCustomization sharedInstance].elementTextColor;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -75,8 +63,9 @@
 
 -(void)viewWillAppear:(BOOL)animated
 {
+    [super viewWillAppear:animated];
 #ifdef ANALYTICS
-    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Manual network entry screen"];
+    [[Mixpanel sharedInstance] track:@"Device Setup: Manual network entry screen"];
 #endif
 }
 
@@ -118,33 +107,30 @@
     }
 }
 
-
-
-
 - (IBAction)connectButtonTapped:(id)sender
 {
-    if (![self.networkNameTextField.text isEqualToString:@""])
+    if (![[self.networkNameTextField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] isEqualToString:@""])
     {
         [self.view endEditing:YES];
         if (self.networkRequiresPasswordSwitch.isOn)
         {
 #ifdef ANALYTICS
-            [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected secured network"];
+            [[Mixpanel sharedInstance] track:@"Device Setup: Selected secured network"];
 #endif
             [self performSegueWithIdentifier:@"require_password" sender:self];
         }
         else
         {
 #ifdef ANALYTICS
-            [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected open network"];
+            [[Mixpanel sharedInstance] track:@"Device Setup: Selected open network"];
 #endif
             [self performSegueWithIdentifier:@"connect" sender:self];
             
         }
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"Please enter a network name." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
     }
-    
-    
-    
 }
 
 

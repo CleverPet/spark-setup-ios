@@ -20,7 +20,7 @@
 #import "SparkSetupResultViewController.h"
 #import "SparkSetupCustomization.h"
 #ifdef ANALYTICS
-#import <SEGAnalytics.h>
+#import <Mixpanel.h>
 #endif
 
 
@@ -29,9 +29,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *readyButton;
 @property (weak, nonatomic) IBOutlet SparkSetupUISpinner *spinner;
 
-@property (weak, nonatomic) IBOutlet UILabel *loggedInLabel;
-@property (weak, nonatomic) IBOutlet SparkSetupUILabel *instructionsLabel;
-//@property (weak, nonatomic) IBOutlet NSLayoutConstraint *scrollViewHeight;
 
 @property (weak, nonatomic) IBOutlet UIImageView *productImageView;
 
@@ -40,18 +37,12 @@
 @property (nonatomic, strong) NSArray *claimedDevices;
 @property (weak, nonatomic) IBOutlet SparkSetupUIButton *logoutButton;
 @property (weak, nonatomic) IBOutlet UIButton *cancelSetupButton;
-@property (weak, nonatomic) IBOutlet SparkSetupUILabel *loggedInUserLabel;
+@property (weak, nonatomic) IBOutlet UIView *sizingView;
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
 
 @end
 
 @implementation SparkGetReadyViewController
-
-
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
-}
-
 
 
 - (void)viewDidLoad {
@@ -59,34 +50,22 @@
     // Do any additional setup after loading the view.
     self.brandImageView.image = [SparkSetupCustomization sharedInstance].brandImage;
     self.brandImageView.backgroundColor = [SparkSetupCustomization sharedInstance].brandImageBackgroundColor;
-    
-    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
-    [self.cancelSetupButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
-    [self.logoutButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
-    
     if ([SparkSetupCustomization sharedInstance].productImage)
         self.productImageView.image = [SparkSetupCustomization sharedInstance].productImage;
 
-    if ([SparkCloud sharedInstance].loggedInUsername)
-        self.loggedInLabel.text = [self.loggedInLabel.text stringByAppendingString:[SparkCloud sharedInstance].loggedInUsername];
-    else
-        self.loggedInLabel.text = @"";
-    self.loggedInLabel.alpha = 0.85;
     self.logoutButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.logoutButton.titleLabel.font.pointSize];
-//    [self.logoutButton setTitleColor:[SparkSetupCustomization sharedInstance].normalTextColor forState:UIControlStateNormal];
+    [self.logoutButton setTitleColor:[SparkSetupCustomization sharedInstance].elementTextColor forState:UIControlStateNormal];
 
     //    self.cancelSetupButton. // customize color too
     self.cancelSetupButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.self.cancelSetupButton.titleLabel.font.pointSize];
-//    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].normalTextColor forState:UIControlStateNormal];
+    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].elementTextColor forState:UIControlStateNormal];
 
     if ([SparkCloud sharedInstance].isAuthenticated)
     {
-        self.loggedInLabel.text = [SparkCloud sharedInstance].loggedInUsername;
     }
     else
     {
         [self.logoutButton setTitle:@"Log in" forState:UIControlStateNormal];
-        self.loggedInLabel.text = @"";
     }
     if ([SparkSetupCustomization sharedInstance].disableLogOutOption) {
         self.logoutButton.hidden = YES;
@@ -113,19 +92,6 @@
     UIUserNotificationType types = UIUserNotificationTypeAlert|UIUserNotificationTypeSound;
     UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:types categories:nil];
     [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
-    
-
-    if (isiPhone4)
-    {
-        self.instructionsLabel.text = [NSString stringWithFormat:@"Scroll down for more instructions:\n%@",self.instructionsLabel.text];
-        [self.view setNeedsUpdateConstraints];
-        
-        [UIView animateWithDuration:0.25f animations:^{
-            [self.view layoutIfNeeded];
-        }];
-    }
-    
-
 }
 
 - (IBAction)troubleShootingButtonTapped:(id)sender
@@ -183,13 +149,7 @@
             }
             else
             {
-                NSString *errStr;
-                if ([SparkSetupCustomization sharedInstance].organization) {
-                    errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Are you sure your organization and product slugs are setup correctly?\n\n%@",error.localizedDescription];
-                } else {
-                    errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Make sure your iOS device is connected to the internet and retry.\n\n%@",error.localizedDescription];
-                }
-                
+                NSString *errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Make sure your iOS device is connected to the internet and retry.\n\n(%@)",error.localizedDescription];
                 UIAlertView *errorAlertView = [[UIAlertView alloc] initWithTitle:@"Error" message:errStr delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                 errorAlertView.delegate = self;
                 [errorAlertView show];
@@ -220,8 +180,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Get ready screen"];
-//    NSLog(@"analytics enabled");
+    [[Mixpanel sharedInstance] track:@"Device Setup: Get ready screen"];
 #endif
 }
 

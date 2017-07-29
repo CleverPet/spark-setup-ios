@@ -17,7 +17,7 @@
 #import "SparkUserLoginViewController.h"
 #import "SparkSetupUIElements.h"
 #ifdef ANALYTICS
-#import <SEGAnalytics.h>
+#import <Mixpanel.h>
 #endif
 
 @interface SparkUserForgotPasswordViewController () <UIAlertViewDelegate, UITextFieldDelegate>
@@ -28,14 +28,6 @@
 @end
 
 @implementation SparkUserForgotPasswordViewController
-
-
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
-}
-
-
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -73,7 +65,7 @@
         if (!error)
         {
 #ifdef ANALYTICS
-            [[SEGAnalytics sharedAnalytics] track:@"Auth: Request password reset"];
+            [[Mixpanel sharedInstance] track:@"Auth: Request password reset"];
 #endif
             
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset password" message:@"Instuctions how to reset your password will be sent to the provided email address. Please check your email and continue according to instructions." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
@@ -116,7 +108,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[SEGAnalytics sharedAnalytics] track:@"Auth: Forgot password screen"];
+    [[Mixpanel sharedInstance] track:@"Auth: Forgot password screen"];
 #endif
 }
 

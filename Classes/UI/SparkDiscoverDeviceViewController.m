@@ -25,10 +25,15 @@
 #import "SparkSetupCustomization.h"
 #import "SparkSetupConnection.h"
 #import "SparkSetupCommManager.h"
+#import "SparkSetupResultViewController.h"
 
 #ifdef ANALYTICS
-#import <SEGAnalytics.h>
+#import <Mixpanel.h>
 #endif
+
+// TODO: Pull this out somewhere for access by the rest of spark setup
+#define BLOCK_SELF_REF_OUTSIDE() __weak __typeof(&*self) weakSelf = self;
+#define BLOCK_SELF_REF_INSIDE() __typeof(&*self) self = weakSelf;
 
 @interface SparkDiscoverDeviceViewController () <NSStreamDelegate, UIAlertViewDelegate, SparkSelectNetworkViewControllerDelegate>
 @property (weak, nonatomic) IBOutlet UIImageView *wifiSignalImageView;
@@ -68,6 +73,9 @@
 @property (weak, nonatomic) IBOutlet UIImageView *wifiInfoImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *checkmarkImageView;
 
+@property (nonatomic, strong) NSTimer *stepTimeoutTimer;
+@property (nonatomic, assign) BOOL cancelIfRequestIsUnsuccessful;
+
 @end
 
 @implementation SparkDiscoverDeviceViewController
@@ -78,13 +86,6 @@
                                                     name:UIApplicationDidBecomeActiveNotification
                                                   object:nil];
 }
-
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
-}
-
-
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -119,15 +120,12 @@
     self.wifiView.layer.borderWidth = 1.0f;
     
 //    self.cancelSetupButton. // customize color too
-    self.cancelSetupButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.self.cancelSetupButton.titleLabel.font.pointSize];
-//    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].normalTextColor forState:UIControlStateNormal];
-    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
-    [self.cancelSetupButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
-
+    self.cancelSetupButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.cancelSetupButton.titleLabel.font.pointSize];
+    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].elementTextColor forState:UIControlStateNormal];
 
     
 #ifdef ANALYTICS
-    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Device discovery screen"];
+    [[Mixpanel sharedInstance] timeEvent:@"Device Setup: Device discovery screen activity"];
 #endif
 
 
@@ -139,6 +137,11 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [self killAllTimers];
+}
 
 -(void)resetWifiSignalIconWithDelay
 {
@@ -157,7 +160,7 @@
     self.checkConnectionTimer = nil;
 
     if (!self.didGoToWifiListScreen)
-        self.checkConnectionTimer = [NSTimer scheduledTimerWithTimeInterval:2.5f target:self selector:@selector(checkDeviceWifiConnection:) userInfo:nil repeats:YES];
+        self.checkConnectionTimer = [NSTimer scheduledTimerWithTimeInterval:2.5f target:self selector:@selector(checkDeviceWifiConnection:) userInfo:nil repeats:NO];
 }
 
 -(void)goToWifiListScreen
@@ -235,7 +238,9 @@
                                                                repeats:YES];
     
     
+    BLOCK_SELF_REF_OUTSIDE();
     self.backgroundTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        BLOCK_SELF_REF_INSIDE();
 //        NSLog(@"Background handler called. Not running background tasks anymore.");
         [[UIApplication sharedApplication] endBackgroundTask:self.backgroundTask];
         self.backgroundTask = UIBackgroundTaskInvalid;
@@ -309,6 +314,9 @@
     // Make sure your segue name in storyboard is the same as this line
     if ([[segue identifier] isEqualToString:@"select_network"])
     {
+#ifdef ANALYTICS
+        [[Mixpanel sharedInstance] track:@"Device Setup: Device discovery screen activity"];
+#endif
 
         [self.checkConnectionTimer invalidate];
         // Get reference to the destination view controller
@@ -322,6 +330,9 @@
     {
         SparkSetupVideoViewController *vc = segue.destinationViewController;
         vc.videoFilePath = [SparkSetupCustomization sharedInstance].instructionalVideoFilename;
+    } else if ([segue.identifier isEqualToString:@"done"]) {
+        SparkSetupResultViewController *resultVC = segue.destinationViewController;
+//        resultVC.setupResult = SparkSetupResultFailureConfigure;
     }
     
 }
@@ -332,17 +343,22 @@
     if (!self.detectedDeviceID)
     {
         NSLog(@"DeviceID sent");
-
+        [self startStepTimeoutTimer];
         SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
         [self.checkConnectionTimer invalidate];
+        BLOCK_SELF_REF_OUTSIDE();
         [manager deviceID:^(id deviceResponseDict, NSError *error)
          {
+             BLOCK_SELF_REF_INSIDE();
              if (error)
              {
                  NSLog(@"Could not send device-id command: %@", error.localizedDescription);
-                 [self restartDeviceDetectionTimer];
-                 [self resetWifiSignalIconWithDelay];
-                 
+                 if (self.cancelIfRequestIsUnsuccessful) {
+                     [self cancelSetup];
+                 } else {
+                     [self restartDeviceDetectionTimer];
+                     [self resetWifiSignalIconWithDelay];
+                 }
              }
              else
              {
@@ -351,7 +367,7 @@
                  self.detectedDeviceID = [self.detectedDeviceID lowercaseString];
                  self.isDetectedDeviceClaimed = [deviceResponseDict[@"c"] boolValue];
                  NSLog(@"DeviceID response received: %@",self.detectedDeviceID );
-
+                 [self stopStepTimeoutTimer];
                  [self photonPublicKey];
 //                 NSLog(@"Got device ID: %@",deviceResponseDict);
              }
@@ -372,13 +388,20 @@
     if (!self.scannedWifiList)
     {
         SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
+        [self startStepTimeoutTimer];
         NSLog(@"ScanAP sent");
+        BLOCK_SELF_REF_OUTSIDE();
         [manager scanAP:^(id scanResponse, NSError *error) {
+            BLOCK_SELF_REF_INSIDE();
             if (error)
             {
                 NSLog(@"Could not send scan-ap command: %@",error.localizedDescription);
-                [self restartDeviceDetectionTimer];
-                [self resetWifiSignalIconWithDelay];
+                if (self.cancelIfRequestIsUnsuccessful) {
+                    [self cancelSetup];
+                } else {
+                    [self restartDeviceDetectionTimer]; // TODO: better error handling
+                    [self resetWifiSignalIconWithDelay];
+                }
             }
             else
             {
@@ -387,6 +410,7 @@
                     NSLog(@"ScanAP response received");
                     self.scannedWifiList = scanResponse;
 //                    NSLog(@"Scan data:\n%@",self.scannedWifiList);
+                    [self stopStepTimeoutTimer];
                     [self checkDeviceOwnershipChange];
                     
                 }
@@ -441,7 +465,7 @@
                     if ([SparkCloud sharedInstance].isAuthenticated)
                     {
                         // that means device is claimed by somebody else - we want to check that with user (and set claimcode if user wants to change ownership)
-                        NSString *messageStr = [NSString stringWithFormat:@"This %@ is has been setup before, do you want to override ownership to %@?",[SparkSetupCustomization sharedInstance].deviceName,[SparkCloud sharedInstance].loggedInUsername];
+                        NSString *messageStr = [NSString stringWithFormat:@"This %@ has been setup before, do you want to override ownership?",[SparkSetupCustomization sharedInstance].deviceName,[SparkCloud sharedInstance].loggedInUsername];
                         self.changeOwnershipAlertView = [[UIAlertView alloc] initWithTitle:@"Product ownership" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Yes",@"No",nil];
                         [self.checkConnectionTimer invalidate];
                         [self.changeOwnershipAlertView show];
@@ -511,12 +535,19 @@
         NSLog(@"PublicKey sent");
         SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
         [self.checkConnectionTimer invalidate];
+        [self startStepTimeoutTimer];
+        BLOCK_SELF_REF_OUTSIDE();
         [manager publicKey:^(id responseCode, NSError *error) {
+            BLOCK_SELF_REF_INSIDE();
             if (error)
             {
                 NSLog(@"Error sending public-key command to target: %@",error.localizedDescription);
-                [self restartDeviceDetectionTimer]; // TODO: better error handling
-                [self resetWifiSignalIconWithDelay];
+                if (self.cancelIfRequestIsUnsuccessful) {
+                    [self cancelSetup];
+                } else {
+                    [self restartDeviceDetectionTimer]; // TODO: better error handling
+                    [self resetWifiSignalIconWithDelay];
+                }
                 
             }
             else
@@ -525,14 +556,19 @@
                 if (code != 0)
                 {
                     NSLog(@"Public key retrival error");
-                    [self restartDeviceDetectionTimer]; // TODO: better error handling
-                    [self resetWifiSignalIconWithDelay];
+                    if (self.cancelIfRequestIsUnsuccessful) {
+                        [self cancelSetup];
+                    } else {
+                        [self restartDeviceDetectionTimer]; // TODO: better error handling
+                        [self resetWifiSignalIconWithDelay];
+                    }
                     
                 }
                 else
                 {
                     NSLog(@"PublicKey response received");
                     self.gotPublicKey = YES;
+                    [self stopStepTimeoutTimer];
                     [self photonScanAP];
                 }
             }
@@ -551,17 +587,25 @@
 {
     SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [self.checkConnectionTimer invalidate];
+    [self startStepTimeoutTimer];
     NSLog(@"Claim code - trying to set");
+    BLOCK_SELF_REF_OUTSIDE();
     [manager setClaimCode:self.claimCode completion:^(id responseCode, NSError *error) {
+        BLOCK_SELF_REF_INSIDE();
         if (error)
         {
             NSLog(@"Could not send set command: %@", error.localizedDescription);
-            [self restartDeviceDetectionTimer];
+            if (self.cancelIfRequestIsUnsuccessful) {
+                [self cancelSetup];
+            } else {
+                [self restartDeviceDetectionTimer];
+            }
         }
         else
         {
             NSLog(@"Device claim code set successfully: %@",self.claimCode);
             // finished - segue
+            [self stopStepTimeoutTimer];
             [self goToWifiListScreen];
 
         }
@@ -576,7 +620,9 @@
 {
     SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [self.checkConnectionTimer invalidate];
+    BLOCK_SELF_REF_OUTSIDE();
     [manager version:^(id version, NSError *error) {
+        BLOCK_SELF_REF_INSIDE();
         if (error)
         {
             NSLog(@"Could not send version command: %@",error.localizedDescription);
@@ -594,14 +640,49 @@
 - (IBAction)cancelButtonTouched:(id)sender
 {
     // finish gracefully
-    [self.checkConnectionTimer invalidate];
-    self.checkConnectionTimer = nil;
+    [self killAllTimers];
     [[NSNotificationCenter defaultCenter] postNotificationName:kSparkSetupDidFinishNotification object:nil userInfo:@{kSparkSetupDidFinishStateKey:@(SparkSetupMainControllerResultUserCancel)}];
     
     
 }
 
+- (void)startStepTimeoutTimer
+{
+    if (!self.stepTimeoutTimer) {
+        self.stepTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(stepTimedOut) userInfo:nil repeats:NO];
+    }
+}
 
+- (void)stopStepTimeoutTimer
+{
+    self.cancelIfRequestIsUnsuccessful = NO;
+    [self.stepTimeoutTimer invalidate];
+    self.stepTimeoutTimer = nil;
+}
 
+- (void)stepTimedOut
+{
+    self.stepTimeoutTimer = nil;
+    self.cancelIfRequestIsUnsuccessful = YES;
+}
+
+- (void)cancelSetup
+{
+    [self killAllTimers];
+    [self performSegueWithIdentifier:@"done" sender:nil];
+}
+
+- (void)killAllTimers
+{
+    [self stopStepTimeoutTimer];
+    [self.checkConnectionTimer invalidate];
+    self.checkConnectionTimer = nil;
+    [self.backgroundTaskTimer invalidate];
+    self.backgroundTaskTimer = nil;
+    if (self.backgroundTask && self.backgroundTask != UIBackgroundTaskInvalid) {
+        [[UIApplication sharedApplication] endBackgroundTask:self.backgroundTask];
+        self.backgroundTask = UIBackgroundTaskInvalid;
+    }
+}
 
 @end

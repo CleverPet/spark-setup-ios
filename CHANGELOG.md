@@ -4,30 +4,6 @@ Particle iOS Device Setup library adheres to [Semantic Versioning](http://semver
 
 ---
 
-## [0.6.1](https://github.com/spark/spark-setup-ios/releases/tag/0.6.1) (2016-9-12)
-
-* Bugfix: Privacy policy and TOS will not cause app crash now 
-
-* Change: Moved from mixpanel to Segment analytics
-
-* Added: lightStatusAndNavBar customization point
-
-* Change: Instructional video is now always displayed landscape full screen
-
-* Change: MODE button has been renamed to SETUP button (for Photon devices)
-
-* Bugfix: Removed some obsolete NSLogs 
-
-## [0.6.0](https://github.com/spark/spark-setup-ios/releases/tag/0.6.0) (2016-7-22)
-
-* Bugfix: didNotSucceedWithDeviceId - will only be called if delegate supports that (@optional)
-
-* Added: 1Password integration for authentication
-
-* Added: Listen to system events at last stage of setup to detect a device came online (even if it went straight to OTA)
-
-* Change: Org/product error messages 
-
 ## [0.5.0](https://github.com/spark/spark-setup-ios/releases/tag/0.5.0) (2016-5-19)
 
 * New delegate function didFailWithDeviceID - will report the device ID that setup failed setting up

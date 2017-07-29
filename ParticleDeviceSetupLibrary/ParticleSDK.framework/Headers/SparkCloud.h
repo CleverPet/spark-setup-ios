@@ -21,7 +21,6 @@
 #import "SparkDevice.h"
 #import "SparkEvent.h"
 
-
 NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *const kSparkAPIBaseURL;
@@ -32,13 +31,7 @@ extern NSString *const kSparkAPIBaseURL;
  *  Currently logged in user name, nil if no valid session
  */
 @property (nonatomic, strong, nullable, readonly) NSString* loggedInUsername;
-/**
- *  Currently logged in via app - deprecated
- */
-@property (nonatomic, readonly) BOOL isLoggedIn __deprecated_msg("Use isAuthenticated instead");
-/**
- *  Currently authenticated (does a access token exist?)
- */
+@property (nonatomic, readonly) BOOL isLoggedIn DEPRECATED_ATTRIBUTE;
 @property (nonatomic, readonly) BOOL isAuthenticated;
 
 /**
@@ -46,13 +39,7 @@ extern NSString *const kSparkAPIBaseURL;
  */
 @property (nonatomic, strong, nullable, readonly) NSString *accessToken;
 
-/**
- *  OAuthClientId unique for your app, use 'particle' for development or generate your OAuth creds for production apps (https://docs.particle.io/reference/api/#create-an-oauth-client)
- */
 @property (nonatomic, null_resettable, strong) NSString *OAuthClientId;
-/**
- *  OAuthClientSecret unique for your app, use 'particle' for development or generate your OAuth creds for production apps (https://docs.particle.io/reference/api/#create-an-oauth-client)
- */
 @property (nonatomic, null_resettable, strong) NSString *OAuthClientSecret;
 
 /**

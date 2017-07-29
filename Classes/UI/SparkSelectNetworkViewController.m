@@ -18,7 +18,7 @@
 #import "SparkSetupWifiTableViewCell.h"
 
 #ifdef ANALYTICS
-#import <SEGAnalytics.h>
+#import <Mixpanel.h>
 #endif
 
 // TODO: move it somewhere else
@@ -44,13 +44,6 @@
 
 @implementation SparkSelectNetworkViewController
 
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
-}
-
-
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
@@ -66,7 +59,7 @@
 
 //    if ([SparkSetupCustomization sharedInstance].tintSetupImages)
 //    {
-        self.wifiTableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+        self.wifiTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 //    }
 //    else
 //    {
@@ -201,19 +194,15 @@
 //        [cell.contentView viewWithTag:20].hidden = YES;
     }
     
-    /*
     if ((indexPath.row % 2) == 0)
     {
         cell.backgroundColor = [UIColor colorWithRed: 0.1 green: 0.1 blue: 0.1 alpha: 0.25];
     }
     else // clear if even
     {
-     */
-    cell.backgroundColor = [UIColor clearColor];
-//    }
-    
-    
-     
+        cell.backgroundColor = [UIColor clearColor];
+    }
+
 
 //    [cell setNeedsLayout];
     return cell;
@@ -327,7 +316,7 @@
     if (secInt == SparkSetupWifiSecurityTypeOpen)
     {
 #ifdef ANALYTICS
-        [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected open network"];
+        [[Mixpanel sharedInstance] track:@"Device Setup: Selected open network"];
 #endif
         [self performSegueWithIdentifier:@"connect" sender:self];
         
@@ -335,7 +324,7 @@
     else
     {
 #ifdef ANALYTICS
-        [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected secured network"];
+        [[Mixpanel sharedInstance] track:@"Device Setup: Selected secured network"];
 #endif
         [self performSegueWithIdentifier:@"require_password" sender:self];
     }
@@ -366,7 +355,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Select Network Screen"];
+    [[Mixpanel sharedInstance] track:@"Device Setup: Select Network Screen"];
 #endif
 }
 

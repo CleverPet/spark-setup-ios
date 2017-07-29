@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-//#define ANALYTICS   1     // comment out to disable Analytics 
+//#define ANALYTICS   1
 
 @interface SparkSetupCustomization : NSObject
 
@@ -49,8 +49,6 @@
 @property (nonatomic, strong) UIColor *linkTextColor;
 
 @property (nonatomic, strong) UIColor *elementBackgroundColor;  // Buttons/spinners background color
-@property (nonatomic) BOOL lightStatusAndNavBar;
-
 // TODO: change to:
 //@property (nonatomic, strong) UIColor *buttonBackgroundColor; // new
 
@@ -75,8 +73,7 @@
 @property (nonatomic, strong) NSString *productName;    // product display name
 @property (nonatomic, strong) NSString *productSlug;    // product string for API endpoint URL - must specify for orgMode
 
-@property (nonatomic, assign) BOOL allowSkipAuthentication;      // allow user to skip authentication
-@property (nonatomic, assign) BOOL allowPasswordManager;         // Display 1Password button next to password entry fields in login/signup
+@property (nonatomic, assign) BOOL allowSkipAuthentication;      // allow user to skip authentication 
 @property (nonatomic, strong) NSString *skipAuthenticationMessage;    // Prompt to display to user when he's requesting to skip authentication
 @property (nonatomic) BOOL disableLogOutOption; // Do not allow the user to log out from the GetReady page.
 

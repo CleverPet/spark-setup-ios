@@ -45,23 +45,23 @@
     if (self = [super init])
     {
         // Defaults
-        self.deviceName = @"Particle device";
+        self.deviceName = @"CleverPet Hub";
 //        self.deviceImage = [UIImage imageNamed:@"photon" inBundle:[SparkSetupMainController getResourcesBundle] compatibleWithTraitCollection:nil]; // TODO: make iOS7 compatible
-        self.brandName = @"Particle";
+        self.brandName = @"CleverPet";
 //        self.brandImage = [UIImage imageNamed:@"spark-logo-head" inBundle:[SparkSetupMainController getResourcesBundle] compatibleWithTraitCollection:nil]; // TODO: make iOS7 compatible
         self.brandImage = [SparkSetupMainController loadImageFromResourceBundle:@"spark-logo-head"];
 //        self.brandImageBackgroundColor = [UIColor colorWithRed:0.79f green:0.79f blue:0.79f alpha:1.0f];
         self.brandImageBackgroundColor = [UIColor colorWithRed:229 green:229 blue:237];
       
-        self.modeButtonName = @"Setup button";
+        self.modeButtonName = @"mode button";
         self.networkNamePrefix = @"Photon";
         self.listenModeLEDColorName = @"blue";
 //        self.appName = self.brandName;// @"SparkSetup";
         self.fontSizeOffset = 0;
         
-        self.privacyPolicyLinkURL = [NSURL URLWithString:@"https://www.particle.io/legal/privacy"];
-        self.termsOfServiceLinkURL = [NSURL URLWithString:@"https://www.particle.io/legal/terms-of-service"];
-        self.forgotPasswordLinkURL = [NSURL URLWithString:@"https://login.particle.io/forgot"];
+        self.privacyPolicyLinkURL = [NSURL URLWithString:@"https://www.spark.io/privacy"];
+        self.termsOfServiceLinkURL = [NSURL URLWithString:@"https://www.spark.io/tos"];
+        self.forgotPasswordLinkURL = [NSURL URLWithString:@"https://www.spark.io/forgot-password"];
         self.troubleshootingLinkURL = [NSURL URLWithString:@"https://community.spark.io/t/spark-core-troubleshooting-guide-spark-team/696"];
         // TODO: add default HTMLs
         
@@ -82,14 +82,12 @@
         self.headerTextFontName = @"HelveticaNeue-Light";
         
         self.tintSetupImages = NO;
-        self.lightStatusAndNavBar = YES;
         
         self.organization = NO;
         self.organizationSlug = @"particle";
         self.organizationName = @"Particle";
         self.productSlug = @"photon";
-        self.productName = @"Photon";
-        self.allowPasswordManager = YES;
+        self.productName = @"CleverPet Hub";
 
         self.allowSkipAuthentication = NO;
         self.skipAuthenticationMessage = @"Skipping authentication will allow you to configure Wi-Fi credentials to your device but it will not be claimed to your account. Are you sure you want to skip authentication?";
