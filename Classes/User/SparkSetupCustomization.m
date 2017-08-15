@@ -45,9 +45,9 @@
     if (self = [super init])
     {
         // Defaults
-        self.deviceName = @"Particle device";
+        self.deviceName = @"CleverPet Hub";
 //        self.deviceImage = [UIImage imageNamed:@"photon" inBundle:[SparkSetupMainController getResourcesBundle] compatibleWithTraitCollection:nil]; // TODO: make iOS7 compatible
-        self.brandName = @"Particle";
+        self.brandName = @"CleverPet";
 //        self.brandImage = [UIImage imageNamed:@"spark-logo-head" inBundle:[SparkSetupMainController getResourcesBundle] compatibleWithTraitCollection:nil]; // TODO: make iOS7 compatible
         self.brandImage = [SparkSetupMainController loadImageFromResourceBundle:@"spark-logo-head"];
 //        self.brandImageBackgroundColor = [UIColor colorWithRed:0.79f green:0.79f blue:0.79f alpha:1.0f];
@@ -87,7 +87,7 @@
         self.organizationSlug = @"particle";
         self.organizationName = @"Particle";
         self.productSlug = @"photon";
-        self.productName = @"Photon";
+        self.productName = @"CleverPet Hub";
 
         self.allowSkipAuthentication = NO;
         self.skipAuthenticationMessage = @"Skipping authentication will allow you to configure Wi-Fi credentials to your device but it will not be claimed to your account. Are you sure you want to skip authentication?";

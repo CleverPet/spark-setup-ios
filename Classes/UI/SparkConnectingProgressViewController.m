@@ -67,12 +67,13 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 @property (nonatomic) NSInteger disconnectRetries;
 @property (nonatomic, strong) UIAlertView *errorAlertView;
 //@property (nonatomic) BOOL connectAPsent, disconnectedFromDevice;
-@property (nonatomic) SparkSetupResult setupResult;
+@property (nonatomic) SparkSetupMainControllerResult setupResult;
 @property (atomic) SparkSetupConnectionProgressState currentState;
 @property (nonatomic, strong) SparkConnectingProgressView *currentStateView;
 @property (strong, nonatomic) IBOutletCollection(SparkConnectingProgressView) NSArray *progressViews;
 
 @property (weak, nonatomic) IBOutlet UIImageView *wifiSymbolImageView;
+@property (nonatomic, assign) BOOL isLeaving;
 @end
 
 @implementation SparkConnectingProgressViewController
@@ -97,7 +98,8 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     self.hostReachability = [Reachability reachabilityWithHostName:@"api.particle.io"]; //TODO: change to https://api...
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [self.hostReachability startNotifier];
-    
+ 
+    self.device = nil;
 //    self.connectAPsent = NO;
 //    self.disconnectedFromDevice = NO;
 
@@ -185,7 +187,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     }
     else
     {
-        self.currentStateView.spinner.tintColor = [SparkSetupCustomization sharedInstance].elementBackgroundColor;
+        self.currentStateView.spinner.tintColor = [SparkSetupCustomization sharedInstance].elementTextColor;
     }
 
 }
@@ -226,13 +228,17 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 }
 
 
--(void)finishSetupWithResult:(SparkSetupResult)result
+-(void)finishSetupWithResult:(SparkSetupMainControllerResult)result
 {
-    self.setupResult = result;
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
-    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        [self performSegueWithIdentifier:@"done" sender:self];
-    });
+    if (!self.isLeaving) {
+        self.isLeaving = YES;
+        self.setupResult = result;
+        
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            [self performSegueWithIdentifier:@"done" sender:self];
+        });
+    }
 }
 
 -(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -241,7 +247,9 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     {
         SparkSetupResultViewController *resultVC = segue.destinationViewController;
         resultVC.device = self.device;
+        resultVC.deviceID = self.deviceID;
         resultVC.setupResult = self.setupResult;
+        //resultVC.setupResult = SparkSetupMainControllerResultSuccessDeviceOffline; //Testing a forced failure
     }
 }
 
@@ -261,7 +269,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 if (self.configureRetries >= kMaxRetriesConfigureAP-1)
                 {
                     [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureConfigure];
+                    [self finishSetupWithResult:SparkSetupMainControllerResultFailureConfigure];
                 }
                 else
                 {
@@ -310,7 +318,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 if (self.connectAPRetries++ >= kMaxRetriesConnectAP)
                 {
                     [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureCannotDisconnectFromDevice];
+                    [self finishSetupWithResult:SparkSetupMainControllerResultFailureCannotDisconnectFromDevice];
                 }
                 else
                 {
@@ -387,14 +395,14 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
         {
             // finished
             [self setCurrentConnectionProgressStateError:NO];
-            [self finishSetupWithResult:SparkSetupResultSuccessUnknown];
+            [self finishSetupWithResult:SparkSetupMainControllerResultSuccessNotClaimed];
             
         }
     }
     else
     {
         [self setCurrentConnectionProgressStateError:YES];
-        [self finishSetupWithResult:SparkSetupResultFailureCannotDisconnectFromDevice];
+        [self finishSetupWithResult:SparkSetupMainControllerResultFailureCannotDisconnectFromDevice];
     }
     
 }
@@ -425,7 +433,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
             if (self.claimRetries >= kMaxRetriesClaim-1)
             {
                 [self setCurrentConnectionProgressStateError:YES];
-                [self finishSetupWithResult:SparkSetupResultFailureClaiming];
+                [self finishSetupWithResult:SparkSetupMainControllerResultFailureClaiming];
             }
             else
             {
@@ -447,9 +455,9 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                     [self nextConnectionProgressState];
                     
                     if (device.connected)
-                        self.setupResult = SparkSetupResultSuccess;
+                        self.setupResult = SparkSetupMainControllerResultSuccess;
                     else
-                        self.setupResult = SparkSetupResultSuccessDeviceOffline;
+                        self.setupResult = SparkSetupMainControllerResultSuccessDeviceOffline;
                     
                     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC);
                     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
@@ -459,7 +467,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 else
                 {
                     [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureClaiming];
+                    [self finishSetupWithResult:SparkSetupMainControllerResultFailureClaiming];
                 }
             }];
 

@@ -26,6 +26,7 @@ NSString *const kSparkSetupDidFinishNotification = @"kSparkSetupDidFinishNotific
 NSString *const kSparkSetupDidFinishStateKey = @"kSparkSetupDidFinishStateKey";
 NSString *const kSparkSetupDidFinishDeviceKey = @"kSparkSetupDidFinishDeviceKey";
 NSString *const kSparkSetupDidLogoutNotification = @"kSparkSetupDidLogoutNotification";
+NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey";
 
 @interface SparkSetupMainController() <SparkUserLoginDelegate>
 
@@ -221,10 +222,17 @@ NSString *const kSparkSetupDidLogoutNotification = @"kSparkSetupDidLogoutNotific
     NSDictionary *finishStateDict = note.userInfo;
     NSNumber* state = finishStateDict[kSparkSetupDidFinishStateKey];
     SparkDevice *device = finishStateDict[kSparkSetupDidFinishDeviceKey];
+    NSString *deviceID = finishStateDict[kSparkSetupDidFailDeviceIDKey];
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kSparkSetupDidFinishNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kSparkSetupDidLogoutNotification object:nil];
     
+    
     [self dismissViewControllerAnimated:YES completion:^{
+        if ((!device) && (deviceID)) {
+            [self.delegate sparkSetupViewController:self didNotSucceeedWithDeviceID:deviceID];
+        }
+        
         [self.delegate sparkSetupViewController:self didFinishWithResult:[state integerValue] device:device]; // TODO: add NSError reporting?
     }];
 }
