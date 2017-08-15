@@ -21,7 +21,7 @@
 #import "SparkSetupUIElements.h"
 #import "SparkSetupResultViewController.h"
 #ifdef ANALYTICS
-#import "Mixpanel.h"
+#import "SEGAnalytics.h"
 #endif
 
 NSInteger const kMaxRetriesDisconnectFromDevice = 10;
@@ -29,7 +29,7 @@ NSInteger const kMaxRetriesClaim = 15;
 NSInteger const kMaxRetriesConfigureAP = 5;
 NSInteger const kMaxRetriesConnectAP = 5;
 NSInteger const kMaxRetriesReachability = 5;
-NSInteger const kWaitForCloudConnectionTime = 3;
+NSInteger const kWaitForCloudConnectionTime = 1;
 
 typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     SparkSetupConnectionProgressStateConfigureCredentials = 0,
@@ -50,6 +50,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 @end
 
 
+
 @interface SparkConnectingProgressViewController ()
 @property (weak, nonatomic) IBOutlet UILabel *ssidLabel;
 @property (nonatomic, strong) NSMutableArray *connectionProgressTextList;
@@ -65,9 +66,11 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 @property (nonatomic) NSInteger configureRetries;
 @property (nonatomic) NSInteger connectAPRetries;
 @property (nonatomic) NSInteger disconnectRetries;
+@property (nonatomic, strong) id statusEventID;
+@property (atomic) BOOL gotStatusEventFromDevice;
 @property (nonatomic, strong) UIAlertView *errorAlertView;
 //@property (nonatomic) BOOL connectAPsent, disconnectedFromDevice;
-@property (nonatomic) SparkSetupResult setupResult;
+@property (nonatomic) SparkSetupMainControllerResult setupResult;
 @property (atomic) SparkSetupConnectionProgressState currentState;
 @property (nonatomic, strong) SparkConnectingProgressView *currentStateView;
 @property (strong, nonatomic) IBOutletCollection(SparkConnectingProgressView) NSArray *progressViews;
@@ -77,10 +80,19 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 
 @implementation SparkConnectingProgressViewController
 
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     self.currentState = SparkSetupConnectionProgressStateConfigureCredentials;
+    self.gotStatusEventFromDevice = NO;
     
     self.ssidLabel.text = self.networkName;
     self.connectionProgressTextList = [[NSMutableArray alloc] init];
@@ -97,7 +109,8 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     self.hostReachability = [Reachability reachabilityWithHostName:@"api.particle.io"]; //TODO: change to https://api...
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [self.hostReachability startNotifier];
-    
+ 
+    self.device = nil;
 //    self.connectAPsent = NO;
 //    self.disconnectedFromDevice = NO;
 
@@ -117,7 +130,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     [self startAnimatingSpinner:self.currentStateView.spinner];
     [self tintConnectionProgressStateSpinner];
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] timeEvent:@"Device Setup: Connecting progress screen activity"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Connecting progress screen"];
 #endif
     
 }
@@ -192,7 +205,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 
 -(void)nextConnectionProgressState
 {
-    NSLog(@"nextConnectionProgressState called, current state: %ld",(long)self.currentState);
+//    NSLog(@"nextConnectionProgressState called, current state: %ld",(long)self.currentState);
     
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -226,7 +239,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
 }
 
 
--(void)finishSetupWithResult:(SparkSetupResult)result
+-(void)finishSetupWithResult:(SparkSetupMainControllerResult)result
 {
     self.setupResult = result;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
@@ -241,6 +254,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     {
         SparkSetupResultViewController *resultVC = segue.destinationViewController;
         resultVC.device = self.device;
+        resultVC.deviceID = self.deviceID;
         resultVC.setupResult = self.setupResult;
     }
 }
@@ -261,11 +275,12 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 if (self.configureRetries >= kMaxRetriesConfigureAP-1)
                 {
                     [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureConfigure];
+                    [self finishSetupWithResult:SparkSetupMainControllerResultFailureConfigure];
                 }
                 else
                 {
                     [self configureDeviceNetworkCredentials];
+                    return;
                 }
             }
         }
@@ -310,12 +325,13 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 if (self.connectAPRetries++ >= kMaxRetriesConnectAP)
                 {
                     [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureCannotDisconnectFromDevice];
+                    [self finishSetupWithResult:SparkSetupMainControllerResultFailureCannotDisconnectFromDevice];
                 }
                 else
                 {
                     self.disconnectRetries = 0;
                     [self connectDeviceToNetwork]; // recursion retry sending connect-ap
+                    return;
                 }
             }
             else
@@ -382,27 +398,75 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
         {
             [self nextConnectionProgressState];
             [self checkDeviceIsClaimed];
+//            NSLog(@"Subscribing to status events for %@",self.deviceID);
+            self.statusEventID = [[SparkCloud sharedInstance] subscribeToMyDevicesEventsWithPrefix:@"spark" handler:^(SparkEvent * _Nullable event, NSError * _Nullable error) {
+//                NSLog(@"got status event");
+                if ([event.deviceID isEqualToString:self.deviceID]) {
+                    self.gotStatusEventFromDevice = YES;
+//                    NSLog(@"from our device");
+                }
+            }];
         }
         else
         {
             // finished
             [self setCurrentConnectionProgressStateError:NO];
-            [self finishSetupWithResult:SparkSetupResultSuccessUnknown];
+            [self finishSetupWithResult:SparkSetupMainControllerResultSuccessNotClaimed];
             
         }
     }
     else
     {
         [self setCurrentConnectionProgressStateError:YES];
-        [self finishSetupWithResult:SparkSetupResultFailureCannotDisconnectFromDevice];
+        [self finishSetupWithResult:SparkSetupMainControllerResultFailureCannotDisconnectFromDevice];
     }
     
 }
+
+
+-(void)getDeviceAndFinishSetup
+{
+    // get the claimed device to report it back to the user
+    [[SparkCloud sharedInstance] getDevice:self.deviceID completion:^(SparkDevice *device, NSError *error) {
+        // --- Done ---
+        if (!error)
+        {
+            self.device = device;
+            [self nextConnectionProgressState];
+            
+            if (device.connected)
+                self.setupResult = SparkSetupMainControllerResultSuccess;
+            else
+                self.setupResult = SparkSetupMainControllerResultSuccessDeviceOffline;
+            
+            if (self.gotStatusEventFromDevice) { // that means device is or was online and now probably OTAing which is fine
+                self.setupResult = SparkSetupMainControllerResultSuccess;
+            }
+            
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC);
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+                [self performSegueWithIdentifier:@"done" sender:self];
+            });
+        }
+        else
+        {
+            [self setCurrentConnectionProgressStateError:YES]; // this should not happen ever
+            [self finishSetupWithResult:SparkSetupMainControllerResultFailureClaiming];
+        }
+    }];
+}
+
+
 
 -(void)checkDeviceIsClaimed // step 4
 {
     // --- Claim device ---
 //    [[SparkCloud sharedInstance] claimDevice:self.deviceID completion:^(NSError *error) {
+    if (self.gotStatusEventFromDevice) {
+        NSLog(@"received event from setup device, finishing setup successfully");
+        [self getDeviceAndFinishSetup];
+    }
+    
     [[SparkCloud sharedInstance] getDevices:^(NSArray *devices, NSError *error) {
         BOOL deviceClaimed = NO;
         if (devices)
@@ -425,43 +489,20 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
             if (self.claimRetries >= kMaxRetriesClaim-1)
             {
                 [self setCurrentConnectionProgressStateError:YES];
-                [self finishSetupWithResult:SparkSetupResultFailureClaiming];
+                [self finishSetupWithResult:SparkSetupMainControllerResultFailureClaiming];
             }
             else
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                     [self checkDeviceIsClaimed]; // recursion retry
+                    return;
                 });
                 
             }
         }
         else
         {
-//            NSLog(@"Claim success");
-            // get the claimed device to report it back to the user
-            [[SparkCloud sharedInstance] getDevice:self.deviceID completion:^(SparkDevice *device, NSError *error) {
-                // --- Done ---
-                if (!error)
-                {
-                    self.device = device;
-                    [self nextConnectionProgressState];
-                    
-                    if (device.connected)
-                        self.setupResult = SparkSetupResultSuccess;
-                    else
-                        self.setupResult = SparkSetupResultSuccessDeviceOffline;
-                    
-                    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC);
-                    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-                        [self performSegueWithIdentifier:@"done" sender:self];
-                    });
-                }
-                else
-                {
-                    [self setCurrentConnectionProgressStateError:YES];
-                    [self finishSetupWithResult:SparkSetupResultFailureClaiming];
-                }
-            }];
+            [self getDeviceAndFinishSetup];
 
 
         }
@@ -487,11 +528,10 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     [super viewWillDisappear:animated];
 //    NSLog(@"-- removed kReachabilityChangedNotification");
     [self.hostReachability stopNotifier];
-#ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Device Setup: Connecting progress screen activity"];
-#endif
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kReachabilityChangedNotification object:nil];
+    [[SparkCloud sharedInstance] unsubscribeFromEventWithID:self.statusEventID];
+//    NSLog(@"Unsubscribing from status events for %@",self.deviceID);
 }
 
 
@@ -502,7 +542,8 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     rotation = [CABasicAnimation animationWithKeyPath:@"transform.rotation"];
     rotation.fromValue = [NSNumber numberWithFloat:0];
     rotation.toValue = [NSNumber numberWithFloat:(2*M_PI)];
-    rotation.duration = 1.1; // Speed
+    rotation.duration = 0.75; // Speed
+    rotation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     rotation.repeatCount = HUGE_VALF; // Repeat forever. Can be a finite number.
     [spinner.layer addAnimation:rotation forKey:@"Spin"];
 }

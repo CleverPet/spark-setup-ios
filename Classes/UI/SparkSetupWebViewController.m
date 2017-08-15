@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 #import "SparkSetupUIElements.h"
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 //#import "UIViewController+SparkSetupMainController.h"
@@ -23,6 +23,13 @@
 @end
 
 @implementation SparkSetupWebViewController
+
+
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -99,7 +106,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Device Setup: Webview Screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Webview Screen"];
 #endif
 }
 

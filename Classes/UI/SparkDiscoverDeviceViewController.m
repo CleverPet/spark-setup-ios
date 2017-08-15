@@ -27,7 +27,7 @@
 #import "SparkSetupCommManager.h"
 
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 @interface SparkDiscoverDeviceViewController () <NSStreamDelegate, UIAlertViewDelegate, SparkSelectNetworkViewControllerDelegate>
@@ -79,6 +79,13 @@
                                                   object:nil];
 }
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.didGoToWifiListScreen = NO;
@@ -113,11 +120,14 @@
     
 //    self.cancelSetupButton. // customize color too
     self.cancelSetupButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.self.cancelSetupButton.titleLabel.font.pointSize];
-    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].normalTextColor forState:UIControlStateNormal];
+//    [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].normalTextColor forState:UIControlStateNormal];
+    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
+    [self.cancelSetupButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
+
 
     
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] timeEvent:@"Device Setup: Device discovery screen activity"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Device discovery screen"];
 #endif
 
 
@@ -299,9 +309,6 @@
     // Make sure your segue name in storyboard is the same as this line
     if ([[segue identifier] isEqualToString:@"select_network"])
     {
-#ifdef ANALYTICS
-        [[Mixpanel sharedInstance] track:@"Device Setup: Device discovery screen activity"];
-#endif
 
         [self.checkConnectionTimer invalidate];
         // Get reference to the destination view controller

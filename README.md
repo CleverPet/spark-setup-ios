@@ -4,7 +4,7 @@
 
 # Particle Device Setup library (beta)
 
-[![Platform](https://img.shields.io/badge/platform-iOS-10a4fa.svg)]() [![license](https://img.shields.io/hexpm/l/plug.svg)]() [![version](https://img.shields.io/badge/pod-0.4.0-green.svg)]() [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Platform](https://img.shields.io/badge/platform-iOS-10a4fa.svg)]() [![license](https://img.shields.io/hexpm/l/plug.svg)]() [![version](https://img.shields.io/badge/pod-0.6.0-green.svg)]() [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 
 The Particle Device Setup library is meant for integrating the initial setup process of Particle devices in your app.
@@ -100,6 +100,14 @@ if let setupController = SparkSetupMainController(setupOnly: true)
 }
 ```
 
+####1Password support
+
+Starting library version 0.6.0 1Password manager support has been added to the signup and login screens - no action is required from the user - 
+if 1Password is installed on the iOS device the lock icon will appear in the password fields on those screen and will allow user to fill in his 
+saved password (login) or create a new one (signup). Only recommendation is adding `LSApplicationQueriesSchemes = org-appextension-feature-password-management` key-value to your `info.plist` file in your app project.
+
+For additional information read [here](https://github.com/AgileBits/onepassword-app-extension#use-case-1-native-app-login).
+
 
 ### Customization
 
@@ -114,7 +122,7 @@ and modify its default properties. Setting the properties in this class is optio
  NSString *brandName;                   // Your brand name
  UIImage *brandImage;                   // Your brand logo to fit in header of setup wizard screens
  UIColor *brandImageBackgroundColor;    // brand logo background color
- NSString *instructionalVideoFilename;  // Instructional video shown when "show me how" button pressed
+ NSString *instructionalVideoFilename;  // Instructional video shown landscape full screen mode when "Show me how" button pressed on second setup screen
 ```
 
 #### Technical data:
@@ -130,13 +138,6 @@ and modify its default properties. Setting the properties in this class is optio
 ```objc
  NSURL *termsOfServiceLinkURL;      // URL for terms of service of the app/device usage
  NSURL *privacyPolicyLinkURL;       // URL for privacy policy of the app/device usage
- NSURL *forgotPasswordLinkURL;      // URL for user password reset (non-organization setup app only) - to be disabled soon
- NSURL *troubleshootingLinkURL;     // URL for troubleshooting text of the app/device usage
-
- NSString *termsOfServiceHTMLFile;  // Static HTML file for terms of service of the app/device usage
- NSString *privacyPolicyHTMLFile;   // Static HTML file for privacy policy of the app/device usage
- NSString *forgotPasswordHTMLFile;  // Static HTML file for user password reset (non-organization setup app only) - to be disabled soon
- NSString *troubleshootingHTMLFile; // Static HTML file for troubleshooting text of the app/device usage
 ```
 
 #### Look & feel:
@@ -152,12 +153,13 @@ and modify its default properties. Setting the properties in this class is optio
  NSString *boldTextFontName;       // Customize setup font - include OTF/TTF file in project
  CGFloat fontSizeOffset;           // Set offset of font size so small/big fonts can be fine-adjusted
  BOOL tintSetupImages;             // This will tint the checkmark/warning/wifi symbols in the setup process to match text color (useful for dark backgrounds)
+ BOOL lightStatusAndNavBar;        // Make navigation and status bar appear in white or black color characters to contrast the selected brandImage color // *New since v0.6.1*
 ```
 
 #### Organization:
 
 Setting `organization=YES` will enable organization mode which uses different API endpoints and requires special permissions (See Particle Dashboard).
-*New fields since v0.2.2*
+*New since v0.2.2*
 
 If you set `organization` to `YES` be sure to also provide the `organizationSlug` and `productSlug` your created in [Particle Dashboard](https://docs.particle.io/guide/tools-and-features/dashboard/).
 Make sure you inject the `SparkCloud` class with scoped OAuth credentials for creating customers (so app users could create an account), [read here](https://docs.particle.io/reference/ios/#oauth-client-configuration) on how to do it correctly.
@@ -182,18 +184,30 @@ To learn how to create those credentials for your organization [read here](https
 
 ### Advanced
 
-You can get an active instance of `SparkDevice` by making your viewcontroller conform to protocol `<SparkSetupMainControllerDelegate>` when setup wizard completes:
+You can get an active instance of `SparkDevice` by making your viewcontroller conform to protocol `<SparkSetupMainControllerDelegate>` when setup wizard completes successfully:
 
 ```objc
 -(void)sparkSetupViewController:(SparkSetupMainController *)controller didFinishWithResult:(SparkSetupMainControllerResult)result device:(SparkDevice *)device;
 ```
 
 ```swift
-func sparkSetupViewController(controller: SparkSetupMainController!, didFinishWithResult result: SparkSetupMainControllerResult, device: SparkDevice!);
+func sparkSetupViewController(controller: SparkSetupMainController!, didFinishWithResult result: SparkSetupMainControllerResult, device: SparkDevice!)
 ```
 
 method will be called, if `(result == SparkSetupMainControllerResultSuccess)` or (or simply `(result == .Success)` in Swift) the device parameter will contain an active `SparkDevice` instance you can interact with
-using the [iOS Cloud SDK](https://cocoapods.org/pods/Spark-SDK). 
+using the [iOS Cloud SDK](https://cocoapods.org/pods/Spark-SDK).
+In case setup failed, aborted or was cancalled  you can determine the exact reason by consulting the documentation of the enum value `SparkSetupMainControllerResult`. See [here](https://github.com/spark/spark-setup-ios/blob/master/Classes/User/SparkSetupMainController.h#L18-31) for additional details.
+
+If setup failed and you can still determine the device ID of the last device that was tried to be setup and failed by conforming to the @optional delegate function: (new since 0.5.0)
+
+```objc
+- (void)sparkSetupViewController:(SparkSetupMainController *)controller didNotSucceeedWithDeviceID:(NSString *)deviceID;
+```
+
+```swift
+func sparkSetupViewController(controller: SparkSetupMainController!, didNotSucceeedWithDeviceID deviceID: String)
+```
+
 
 ### Example
 Cocoapods usage example app (in Swift) can be found [here](https://www.github.com/spark/spark-setup-ios-example/). Example app demonstates - invoking the setup wizard, customizing its UI and using the returned SparkDevice instance once 
@@ -237,7 +251,7 @@ You must have Carthage installed, if you don't then be sure to [install Carthage
 Then to build the Particle iOS device setup library, simply create a `Cartfile` on your project root folder (that's important), containing the following line:
 
 ```
-github "spark/spark-setup-ios" ~> 0.4.0
+github "spark/spark-setup-ios" ~> 0.6.0
 ```
 
 and then run the following command:
