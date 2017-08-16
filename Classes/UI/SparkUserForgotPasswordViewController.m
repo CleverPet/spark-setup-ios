@@ -17,17 +17,26 @@
 #import "SparkUserLoginViewController.h"
 #import "SparkSetupUIElements.h"
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 @interface SparkUserForgotPasswordViewController () <UIAlertViewDelegate, UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *emailTextField;
 @property (weak, nonatomic) IBOutlet UIImageView *brandImageView;
 @property (weak, nonatomic) IBOutlet SparkSetupUISpinner *spinner;
+@property (weak, nonatomic) IBOutlet SparkSetupUIButton *resetPasswordButton;
 
 @end
 
 @implementation SparkUserForgotPasswordViewController
+
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -61,11 +70,12 @@
     void (^passwordResetCallback)(NSError *) = ^void(NSError *error) {
         
         [self.spinner stopAnimating];
+        self.resetPasswordButton.userInteractionEnabled = YES;
         
         if (!error)
         {
 #ifdef ANALYTICS
-            [[Mixpanel sharedInstance] track:@"Auth: Request password reset"];
+            [[SEGAnalytics sharedAnalytics] track:@"Auth: Request password reset"];
 #endif
             
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset password" message:@"Instuctions how to reset your password will be sent to the provided email address. Please check your email and continue according to instructions." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
@@ -82,9 +92,10 @@
     
     if ([self isValidEmail:self.emailTextField.text])
     {
-        if ([SparkSetupCustomization sharedInstance].organization) // TODO: fix that so it'll work for non-org too
+        self.resetPasswordButton.userInteractionEnabled = NO;
+        if ([SparkSetupCustomization sharedInstance].productMode) // TODO: fix that so it'll work for non-org too
         {
-            [[SparkCloud sharedInstance] requestPasswordResetForCustomer:[SparkSetupCustomization sharedInstance].organizationName email:self.emailTextField.text completion:passwordResetCallback];
+            [[SparkCloud sharedInstance] requestPasswordResetForCustomer:self.emailTextField.text productId:[SparkSetupCustomization sharedInstance].productId completion:passwordResetCallback];
         }
         else
         {
@@ -108,7 +119,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Auth: Forgot password screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Auth: Forgot password screen"];
 #endif
 }
 

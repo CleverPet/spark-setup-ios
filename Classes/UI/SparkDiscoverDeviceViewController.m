@@ -28,7 +28,7 @@
 #import "SparkSetupResultViewController.h"
 
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 // TODO: Pull this out somewhere for access by the rest of spark setup
@@ -87,6 +87,13 @@
                                                   object:nil];
 }
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.didGoToWifiListScreen = NO;
@@ -123,9 +130,14 @@
     self.cancelSetupButton.titleLabel.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].headerTextFontName size:self.cancelSetupButton.titleLabel.font.pointSize];
     [self.cancelSetupButton setTitleColor:[SparkSetupCustomization sharedInstance].elementTextColor forState:UIControlStateNormal];
 
+    //UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
+    //[self.cancelSetupButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
+
+
+
     
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] timeEvent:@"Device Setup: Device discovery screen activity"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Device discovery screen"];
 #endif
 
 
@@ -314,9 +326,6 @@
     // Make sure your segue name in storyboard is the same as this line
     if ([[segue identifier] isEqualToString:@"select_network"])
     {
-#ifdef ANALYTICS
-        [[Mixpanel sharedInstance] track:@"Device Setup: Device discovery screen activity"];
-#endif
 
         [self.checkConnectionTimer invalidate];
         // Get reference to the destination view controller
@@ -342,14 +351,11 @@
 {
     if (!self.detectedDeviceID)
     {
-        NSLog(@"DeviceID sent");
-        [self startStepTimeoutTimer];
-        SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
         [self.checkConnectionTimer invalidate];
-        BLOCK_SELF_REF_OUTSIDE();
+        
+        SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
         [manager deviceID:^(id deviceResponseDict, NSError *error)
-         {
-             BLOCK_SELF_REF_INSIDE();
+        {
              if (error)
              {
                  NSLog(@"Could not send device-id command: %@", error.localizedDescription);
@@ -366,8 +372,8 @@
                  self.detectedDeviceID = (NSString *)deviceResponseDict[@"id"]; //TODO: fix that dict interpretation is done in comm manager (layer completion)
                  self.detectedDeviceID = [self.detectedDeviceID lowercaseString];
                  self.isDetectedDeviceClaimed = [deviceResponseDict[@"c"] boolValue];
-                 NSLog(@"DeviceID response received: %@",self.detectedDeviceID );
-                 [self stopStepTimeoutTimer];
+                 //NSLog(@"DeviceID response received: %@",self.detectedDeviceID );
+
                  [self photonPublicKey];
 //                 NSLog(@"Got device ID: %@",deviceResponseDict);
              }
@@ -388,11 +394,8 @@
     if (!self.scannedWifiList)
     {
         SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
-        [self startStepTimeoutTimer];
-        NSLog(@"ScanAP sent");
-        BLOCK_SELF_REF_OUTSIDE();
+//        NSLog(@"ScanAP sent");
         [manager scanAP:^(id scanResponse, NSError *error) {
-            BLOCK_SELF_REF_INSIDE();
             if (error)
             {
                 NSLog(@"Could not send scan-ap command: %@",error.localizedDescription);
@@ -407,7 +410,7 @@
             {
                 if (scanResponse)
                 {
-                    NSLog(@"ScanAP response received");
+//                    NSLog(@"ScanAP response received");
                     self.scannedWifiList = scanResponse;
 //                    NSLog(@"Scan data:\n%@",self.scannedWifiList);
                     [self stopStepTimeoutTimer];
@@ -465,7 +468,9 @@
                     if ([SparkCloud sharedInstance].isAuthenticated)
                     {
                         // that means device is claimed by somebody else - we want to check that with user (and set claimcode if user wants to change ownership)
-                        NSString *messageStr = [NSString stringWithFormat:@"This %@ has been setup before, do you want to override ownership?",[SparkSetupCustomization sharedInstance].deviceName,[SparkCloud sharedInstance].loggedInUsername];
+                        //NSString *messageStr = [NSString stringWithFormat:@"This %@ has been setup before, do you want to override ownership?",[SparkSetupCustomization sharedInstance].deviceName,[SparkCloud sharedInstance].loggedInUsername];
+
+
                         self.changeOwnershipAlertView = [[UIAlertView alloc] initWithTitle:@"Product ownership" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Yes",@"No",nil];
                         [self.checkConnectionTimer invalidate];
                         [self.changeOwnershipAlertView show];
@@ -511,7 +516,6 @@
 {
     if (alertView == self.changeOwnershipAlertView)
     {
-        NSLog(@"button index %ld",(long)buttonIndex);
         if (buttonIndex == 0) //YES
         {
             self.needToCheckDeviceClaimed = YES;
@@ -532,13 +536,10 @@
 {
     if (!self.gotPublicKey)
     {
-        NSLog(@"PublicKey sent");
-        SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
+//        NSLog(@"PublicKey sent");
         [self.checkConnectionTimer invalidate];
-        [self startStepTimeoutTimer];
-        BLOCK_SELF_REF_OUTSIDE();
+        SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
         [manager publicKey:^(id responseCode, NSError *error) {
-            BLOCK_SELF_REF_INSIDE();
             if (error)
             {
                 NSLog(@"Error sending public-key command to target: %@",error.localizedDescription);
@@ -566,7 +567,7 @@
                 }
                 else
                 {
-                    NSLog(@"PublicKey response received");
+//                    NSLog(@"PublicKey response received");
                     self.gotPublicKey = YES;
                     [self stopStepTimeoutTimer];
                     [self photonScanAP];
@@ -587,11 +588,8 @@
 {
     SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [self.checkConnectionTimer invalidate];
-    [self startStepTimeoutTimer];
-    NSLog(@"Claim code - trying to set");
-    BLOCK_SELF_REF_OUTSIDE();
+//    NSLog(@"Claim code - trying to set");
     [manager setClaimCode:self.claimCode completion:^(id responseCode, NSError *error) {
-        BLOCK_SELF_REF_INSIDE();
         if (error)
         {
             NSLog(@"Could not send set command: %@", error.localizedDescription);
@@ -603,7 +601,7 @@
         }
         else
         {
-            NSLog(@"Device claim code set successfully: %@",self.claimCode);
+//            NSLog(@"Device claim code set successfully: %@",self.claimCode);
             // finished - segue
             [self stopStepTimeoutTimer];
             [self goToWifiListScreen];
@@ -618,9 +616,9 @@
 
 -(void)getDeviceVersion
 {
-    SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [self.checkConnectionTimer invalidate];
-    BLOCK_SELF_REF_OUTSIDE();
+
+    SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [manager version:^(id version, NSError *error) {
         BLOCK_SELF_REF_INSIDE();
         if (error)
@@ -629,8 +627,8 @@
         }
         else
         {
-            NSString *versionStr = version;
-            NSLog(@"Device version:\n%@",versionStr);
+//            NSString *versionStr = version;
+//            NSLog(@"Device version:\n%@",versionStr);
         }
     }];
 }
