@@ -471,7 +471,7 @@
                         //NSString *messageStr = [NSString stringWithFormat:@"This %@ has been setup before, do you want to override ownership?",[SparkSetupCustomization sharedInstance].deviceName,[SparkCloud sharedInstance].loggedInUsername];
 
 
-                        self.changeOwnershipAlertView = [[UIAlertView alloc] initWithTitle:@"Product ownership" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Yes",@"No",nil];
+                        //self.changeOwnershipAlertView = [[UIAlertView alloc] initWithTitle:@"Product ownership" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Yes",@"No",nil];
                         [self.checkConnectionTimer invalidate];
                         [self.changeOwnershipAlertView show];
                     }
@@ -620,7 +620,7 @@
 
     SparkSetupCommManager *manager = [[SparkSetupCommManager alloc] init];
     [manager version:^(id version, NSError *error) {
-        BLOCK_SELF_REF_INSIDE();
+        
         if (error)
         {
             NSLog(@"Could not send version command: %@",error.localizedDescription);
