@@ -1,10 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = "SparkSetup"
-<<<<<<< HEAD
-    s.version          = "0.5.0"
-=======
     s.version          = "0.7.0"
->>>>>>> 2e35796a2f90ff42c58361b6403898fb7f2063f1
     s.summary          = "Particle iOS Device Setup library for easy integration of setup process for Particle devices in your app"
     s.description      = <<-DESC
                         Particle (formerly Spark) Device Setup library for integrating setup process of Particle devices in your app
