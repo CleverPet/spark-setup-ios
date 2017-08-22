@@ -39,6 +39,11 @@ NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey"
 
 @implementation SparkSetupMainController
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
 
 +(NSBundle *)getResourcesBundle
 {
@@ -234,6 +239,11 @@ NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey"
         }
         
         [self.delegate sparkSetupViewController:self didFinishWithResult:[state integerValue] device:device]; // TODO: add NSError reporting?
+        if ((!device) && (deviceID)) {
+            if ([self.delegate respondsToSelector:@selector(sparkSetupViewController:didNotSucceeedWithDeviceID:)]) {
+                [self.delegate sparkSetupViewController:self didNotSucceeedWithDeviceID:deviceID];
+            }
+        }
     }];
 }
 

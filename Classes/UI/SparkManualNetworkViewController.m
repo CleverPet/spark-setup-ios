@@ -14,7 +14,7 @@
 #import "SparkSetupPasswordEntryViewController.h"
 #import "SparkSetupCustomization.h"
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 @interface SparkManualNetworkViewController () <UITextFieldDelegate>
@@ -28,12 +28,23 @@
 
 @implementation SparkManualNetworkViewController
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     // move to super viewdidload?
     self.brandImageView.image = [SparkSetupCustomization sharedInstance].brandImage;
     self.brandImageView.backgroundColor = [SparkSetupCustomization sharedInstance].brandImageBackgroundColor;
+    
+    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
+    [self.backButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
+
     
     // Trick to add an inset from the left of the text fields
     CGRect  viewRect = CGRectMake(0, 0, 10, 32);
@@ -65,7 +76,7 @@
 {
     [super viewWillAppear:animated];
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Device Setup: Manual network entry screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Manual network entry screen"];
 #endif
 }
 
@@ -115,14 +126,14 @@
         if (self.networkRequiresPasswordSwitch.isOn)
         {
 #ifdef ANALYTICS
-            [[Mixpanel sharedInstance] track:@"Device Setup: Selected secured network"];
+            [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected secured network"];
 #endif
             [self performSegueWithIdentifier:@"require_password" sender:self];
         }
         else
         {
 #ifdef ANALYTICS
-            [[Mixpanel sharedInstance] track:@"Device Setup: Selected open network"];
+            [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Selected open network"];
 #endif
             [self performSegueWithIdentifier:@"connect" sender:self];
             

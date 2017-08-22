@@ -9,17 +9,23 @@
 #import "SparkUserSignupViewController.h"
 #ifdef FRAMEWORK
 #import <ParticleSDK/ParticleSDK.h>
+#import <OnePasswordExtension/OnePasswordExtension.h>
 #else
 #import "Spark-SDK.h"
+#import <1PasswordExtension/OnePasswordExtension.h>
 #endif
 #import "SparkUserLoginViewController.h"
 #import "SparkSetupWebViewController.h"
 #import "SparkSetupCustomization.h"
 #import "SparkSetupUIElements.h"
 #import "SparkSetupMainController.h"
+
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
+
+
+
 
 @interface SparkUserSignupViewController () <UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet SparkSetupUISpinner *spinner;
@@ -35,12 +41,47 @@
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *signupButtonSpace;
 @property (weak, nonatomic) IBOutlet SparkSetupUIButton *skipAuthButton;
 @property (strong, nonatomic) UIAlertView *skipAuthAlertView;
+@property (weak, nonatomic) IBOutlet UIButton *onePasswordButton;
+@property (weak, nonatomic) IBOutlet UITextField *firstNameTextField;
+@property (weak, nonatomic) IBOutlet UITextField *lastNameTextField;
+@property (weak, nonatomic) IBOutlet UITextField *companyNameTextField;
+@property (weak, nonatomic) IBOutlet UISwitch *businessAccountSwitch;
+@property (weak, nonatomic) IBOutlet SparkSetupUILabel *businessAccountLabel;
+@property (weak, nonatomic) IBOutlet UIView *TosAndPpView;
 
 @end
 
 @implementation SparkUserSignupViewController
 
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+-(void)applyDesignToTextField:(UITextField *)textField {
+    CGRect  viewRect = CGRectMake(0, 0, 10, 32);
+    UIView* emptyView = [[UIView alloc] initWithFrame:viewRect];
+    textField.leftView = emptyView;
+    textField.leftViewMode = UITextFieldViewModeAlways;
+    textField.delegate = self;
+    textField.returnKeyType = UIReturnKeyNext;
+    textField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
+
+}
+
+- (IBAction)businessAccountSwitchChanged:(id)sender {
+    if (self.businessAccountSwitch.on) {
+        self.companyNameTextField.alpha = 1.0;
+        self.companyNameTextField.userInteractionEnabled = YES;
+        self.businessAccountLabel.text = @"This is a business account";
+    } else {
+        self.companyNameTextField.alpha = 0.6;
+        self.companyNameTextField.userInteractionEnabled = NO;
+        self.businessAccountLabel.text = @"This is a personal account";
+    }
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -54,98 +95,45 @@
     self.logoImageView.image = [SparkSetupCustomization sharedInstance].brandImage;
     self.logoImageView.backgroundColor = [SparkSetupCustomization sharedInstance].brandImageBackgroundColor;
     
-    // add an inset from the left of the text fields
-    CGRect  viewRect = CGRectMake(0, 0, 10, 32);
-    UIView* emptyView1 = [[UIView alloc] initWithFrame:viewRect];
-    UIView* emptyView2 = [[UIView alloc] initWithFrame:viewRect];
-    UIView* emptyView3 = [[UIView alloc] initWithFrame:viewRect];
-//    UIView* emptyView4 = [[UIView alloc] initWithFrame:viewRect];
+
+    [self applyDesignToTextField:self.emailTextField];
+    [self applyDesignToTextField:self.passwordTextField];
+    [self applyDesignToTextField:self.passwordVerifyTextField];
     
-    self.emailTextField.leftView = emptyView1;
-    self.emailTextField.leftViewMode = UITextFieldViewModeAlways;
-    self.emailTextField.delegate = self;
-    self.emailTextField.returnKeyType = UIReturnKeyNext;
-    self.emailTextField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
+    [self applyDesignToTextField:self.firstNameTextField];
+    [self applyDesignToTextField:self.lastNameTextField];
+    [self applyDesignToTextField:self.companyNameTextField];
+    
+    
+    
+    if (isiPhone4) { // 3.5" inch screens are too small to display this stuff
+        self.TosAndPpView.hidden = YES;
+    }
+    
+    
 
-    self.passwordTextField.leftView = emptyView2;
-    self.passwordTextField.leftViewMode = UITextFieldViewModeAlways;
-    self.passwordTextField.delegate = self;
-    self.passwordTextField.returnKeyType = UIReturnKeyNext;
-    self.passwordTextField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
-
-    self.passwordVerifyTextField.leftView = emptyView3;
-    self.passwordVerifyTextField.leftViewMode = UITextFieldViewModeAlways;
-    self.passwordVerifyTextField.delegate = self;
-    self.passwordVerifyTextField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
-
-    /*
-    if ([SparkSetupCustomization sharedInstance].organization)
+    
+    
+    if ([SparkSetupCustomization sharedInstance].productMode)
     {
-        self.passwordVerifyTextField.returnKeyType = UIReturnKeyNext;
-        
-        self.activationCodeTextField.leftView = emptyView4;
-        self.activationCodeTextField.leftViewMode = UITextFieldViewModeAlways;
-        self.activationCodeTextField.delegate = self;
-        self.activationCodeTextField.hidden = NO;
-        self.activationCodeTextField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
-     self.activationCodeTextField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
-     self.activationCodeTextField.delegate = self;
-     
-     else
-     {*/
+        self.firstNameTextField.hidden = YES;
+        self.lastNameTextField.hidden = YES;
+        self.companyNameTextField.hidden = YES;
+        self.businessAccountLabel.hidden = YES;
+        self.businessAccountSwitch.hidden = YES;
+    }
+
     // make sign up button be closer to verify password textfield (no activation code field)
     self.signupButtonSpace.constant = 16;
     self.skipAuthButton.hidden = !([SparkSetupCustomization sharedInstance].allowSkipAuthentication);
     
-    
-    /*
-     if ((self.predefinedActivationCode) && (self.predefinedActivationCode.length >= 4))
-     {
-        // trim white space, set string max length to 4 chars and uppercase it
-        NSString *code = self.predefinedActivationCode;
-        NSString *codeWhiteSpaceTrimmed = [code stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        codeWhiteSpaceTrimmed = [codeWhiteSpaceTrimmed stringByReplacingOccurrencesOfString:@" " withString:@""];
-        codeWhiteSpaceTrimmed = [codeWhiteSpaceTrimmed stringByReplacingOccurrencesOfString:@"%20" withString:@""];
-        NSRange stringRange = {0, 4};
-        NSString *shortActCode = [codeWhiteSpaceTrimmed substringWithRange:stringRange];
-        self.activationCodeTextField.text = [shortActCode uppercaseString];
+    [self.onePasswordButton setHidden:![[OnePasswordExtension sharedExtension] isAppExtensionAvailable]];
+    if (!self.onePasswordButton.hidden) {
+        self.onePasswordButton.hidden = ![SparkSetupCustomization sharedInstance].allowPasswordManager;
     }
 
-     */
-   
-
+    
 }
-
-
-// removed activation code
-/*
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
-{
-    
-    if (textField == self.activationCodeTextField)
-    {
-        NSRange lowercaseCharRange = [string rangeOfCharacterFromSet:[NSCharacterSet lowercaseLetterCharacterSet]];
-    
-        // make activation code uppercase
-        if (lowercaseCharRange.location != NSNotFound) {
-            textField.text = [textField.text stringByReplacingCharactersInRange:range
-                                                                     withString:[string uppercaseString]];
-            return NO;
-        }
-        
-        // limit it to 4 chars
-        if(range.length + range.location > textField.text.length)
-        {
-            return NO;
-        }
-        
-        NSUInteger newLength = [textField.text length] + [string length] - range.length;
-        return (newLength > 4) ? NO : YES;
-    }
-    
-    return YES;
-}
- */
 
 
 -(BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -160,16 +148,9 @@
     }
     if (textField == self.passwordVerifyTextField)
     {
-//        if ([SparkSetupCustomization sharedInstance].organization)
-//            [self.activationCodeTextField becomeFirstResponder];
-//        else
-            [self signupButton:self];
+        [self signupButton:self];
     }
-//    if (textField == self.activationCodeTextField)
-//    {
-//        [self signupButton:self];
-//    }
-    
+
     return YES;
     
 }
@@ -177,8 +158,9 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Auth: Sign Up screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Auth: Sign Up screen"];
 #endif
+    [self businessAccountSwitchChanged:self];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -188,31 +170,84 @@
 
 
 
+- (IBAction)onePasswordButtonTapped:(id)sender {
+    NSDictionary *newLoginDetails = @{
+                                      AppExtensionTitleKey: @"Particle",
+                                      AppExtensionUsernameKey: self.emailTextField.text ? : @"",
+                                      AppExtensionPasswordKey: self.passwordTextField.text ? : @"",
+                                      AppExtensionNotesKey: @"Saved with the Particle app",
+                                      AppExtensionSectionTitleKey: @"Particle",
+                                      AppExtensionFieldsKey: @{
+                                              @"username" : self.emailTextField.text ? : @""
+                                              // Add as many string fields as you please.
+                                              }
+                                      };
+    
+    // The password generation options are optional, but are very handy in case you have strict rules about password lengths, symbols and digits.
+    NSDictionary *passwordGenerationOptions = @{
+                                                // The minimum password length can be 4 or more.
+                                                AppExtensionGeneratedPasswordMinLengthKey: @(8),
+                                                
+                                                // The maximum password length can be 50 or less.
+                                                AppExtensionGeneratedPasswordMaxLengthKey: @(30),
+                                                
+                                                // If YES, the 1Password will guarantee that the generated password will contain at least one digit (number between 0 and 9). Passing NO will not exclude digits from the generated password.
+                                                AppExtensionGeneratedPasswordRequireDigitsKey: @(YES),
+                                                
+                                                // If YES, the 1Password will guarantee that the generated password will contain at least one symbol (See the list bellow). Passing NO with will exclude symbols from the generated password.
+                                                AppExtensionGeneratedPasswordRequireSymbolsKey: @(NO),
+                                                
+                                                // Here are all the symbols available in the the 1Password Password Generator:
+                                                // !@#$%^&*()_-+=|[]{}'\";.,>?/~`
+                                                // The string for AppExtensionGeneratedPasswordForbiddenCharactersKey should contain the symbols and characters that you wish 1Password to exclude from the generated password.
+                                                AppExtensionGeneratedPasswordForbiddenCharactersKey: @"!@#$%/0lIO"
+                                                };
+    
+    [[OnePasswordExtension sharedExtension] storeLoginForURLString:@"https://login.particle.io" loginDetails:newLoginDetails passwordGenerationOptions:passwordGenerationOptions forViewController:self sender:sender completion:^(NSDictionary *loginDictionary, NSError *error) {
+        
+        if (loginDictionary.count == 0) {
+            if (error.code != AppExtensionErrorCodeCancelledByUser) {
+                NSLog(@"Failed to use 1Password App Extension to save a new Login: %@", error);
+            }
+            return;
+        }
+        
+        self.emailTextField.text = loginDictionary[AppExtensionUsernameKey] ? : @"";
+        self.passwordTextField.text = loginDictionary[AppExtensionPasswordKey] ? : @"";
+        self.passwordVerifyTextField.text = loginDictionary[AppExtensionPasswordKey] ? : @"";
+        // retrieve any additional fields that were passed in newLoginDetails dictionary
+    }];
+}
 
 - (IBAction)signupButton:(id)sender
 {
     [self.view endEditing:YES];
     __block NSString *email = [self.emailTextField.text lowercaseString];
     
-    if (![self.passwordTextField.text isEqualToString:self.passwordVerifyTextField.text])
+    if (self.passwordTextField.text.length < 8)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Password must be at least 8 characters long" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
+    } else if (![self.passwordTextField.text isEqualToString:self.passwordVerifyTextField.text])
     {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Passwords do not match" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
     }
     else if ([self isValidEmail:email])
     {
-        BOOL orgMode = [SparkSetupCustomization sharedInstance].organization;
-        if (orgMode)
+        BOOL productMode = [SparkSetupCustomization sharedInstance].productMode;
+        if (productMode)
         {
             // org user sign up
             [self.spinner startAnimating];
+            self.signupButton.enabled = NO;
             
             // Sign up and then login
-            [[SparkCloud sharedInstance] signupWithCustomer:email password:self.passwordTextField.text orgSlug:[SparkSetupCustomization sharedInstance].organizationSlug completion:^(NSError *error) {
+            [[SparkCloud sharedInstance] createCustomer:email password:self.passwordTextField.text productId:[SparkSetupCustomization sharedInstance].productId accountInfo:nil completion:^(NSError *error) {
                 if (!error)
                 {
 #ifdef ANALYTICS
-                    [[Mixpanel sharedInstance] track:@"Auth: Signed Up New Customer"];
+                    [[SEGAnalytics sharedAnalytics] track:@"Auth: Signed Up New Customer"];
 #endif
                     
                     [self.delegate didFinishUserAuthentication:self loggedIn:YES];
@@ -221,6 +256,7 @@
                 else
                 {
                     [self.spinner stopAnimating];
+                    self.signupButton.enabled = YES;
                     NSLog(@"Error signing up: %@",error.localizedDescription);
                     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Could not signup" message:@"Make sure your user email does not already exist and that you have entered the activation code correctly and that it was not already used"/*error.localizedDescription*/ delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                     [alert show];
@@ -230,19 +266,41 @@
         }
         else
         {
+            if ([SparkSetupCustomization sharedInstance].organization) {
+                NSException* deprecationException = [NSException
+                                                     exceptionWithName:@"OrganizationModeDeprecated"
+                                                     reason:@"You can no longer use orgnaization mode, set productMode to true and set your productId"
+                                                     userInfo:nil];
+                @throw deprecationException;
+            }
+
             // normal user sign up
             [self.spinner startAnimating];
+            self.signupButton.enabled = NO;
+            
+            NSMutableDictionary *accountInfo;
+            if ((![self.firstNameTextField.text isEqualToString:@""]) || (![self.lastNameTextField.text isEqualToString:@""]) || (![self.companyNameTextField.text isEqualToString:@""])) {
+                accountInfo = [@{@"first_name":self.firstNameTextField.text,
+                                 @"last_name":self.lastNameTextField.text,
+                                 @"business_account":[NSNumber numberWithBool:self.businessAccountSwitch.on]
+                                 } mutableCopy];
+                
+                if (self.businessAccountSwitch.on) {
+                    accountInfo[@"company_name"] = self.companyNameTextField.text;
+                }
+            }
             
             // Sign up and then login
-            [[SparkCloud sharedInstance] signupWithUser:email password:self.passwordTextField.text completion:^(NSError *error) {
+            [[SparkCloud sharedInstance] createUser:email password:self.passwordTextField.text accountInfo:accountInfo completion:^(NSError *error) {
                 if (!error)
                 {
 #ifdef ANALYTICS
-                    [[Mixpanel sharedInstance] track:@"Auth: Signed Up New User"];
+                    [[SEGAnalytics sharedAnalytics] track:@"Auth: Signed Up New User"];
 #endif
                     
                     [[SparkCloud sharedInstance] loginWithUser:email password:self.passwordTextField.text completion:^(NSError *error) {
                         [self.spinner stopAnimating];
+                        self.signupButton.enabled = YES;
                         if (!error)
                         {
                             //                        [self performSegueWithIdentifier:@"discover" sender:self];
@@ -258,6 +316,7 @@
                 else
                 {
                     [self.spinner stopAnimating];
+                    self.signupButton.enabled = YES;
                     NSLog(@"Error signing up: %@",error.localizedDescription);
                     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:error.localizedDescription delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                     [alert show];
@@ -278,7 +337,8 @@
 - (IBAction)privacyPolicyButton:(id)sender
 {
     [self.view endEditing:YES];
-    SparkSetupWebViewController* webVC = [[UIStoryboard storyboardWithName:@"setup" bundle:[NSBundle bundleWithIdentifier:SPARK_SETUP_RESOURCE_BUNDLE_IDENTIFIER]] instantiateViewControllerWithIdentifier:@"webview"];
+    
+    SparkSetupWebViewController* webVC = [[SparkSetupMainController getSetupStoryboard]instantiateViewControllerWithIdentifier:@"webview"];
     webVC.link = [SparkSetupCustomization sharedInstance].privacyPolicyLinkURL;
 //    webVC.htmlFilename = @"test";
     [self presentViewController:webVC animated:YES completion:nil];
@@ -289,7 +349,7 @@
 - (IBAction)termOfServiceButton:(id)sender
 {
     [self.view endEditing:YES];
-    SparkSetupWebViewController* webVC = [[UIStoryboard storyboardWithName:@"setup" bundle:[NSBundle bundleWithIdentifier:SPARK_SETUP_RESOURCE_BUNDLE_IDENTIFIER]] instantiateViewControllerWithIdentifier:@"webview"];
+    SparkSetupWebViewController* webVC = [[SparkSetupMainController getSetupStoryboard] instantiateViewControllerWithIdentifier:@"webview"];
     webVC.link = [SparkSetupCustomization sharedInstance].termsOfServiceLinkURL;
     [self presentViewController:webVC animated:YES completion:nil];
 }
@@ -325,7 +385,7 @@
         if (buttonIndex == 0) //YES
         {
 #ifdef ANALYTICS
-            [[Mixpanel sharedInstance] track:@"Auth: Auth skipped"];
+            [[SEGAnalytics sharedAnalytics] track:@"Auth: Auth skipped"];
 #endif
             [self.delegate didFinishUserAuthentication:self loggedIn:NO];
         }

@@ -10,13 +10,18 @@
 #import "SparkSetupWebViewController.h"
 #import "SparkSetupCustomization.h"
 #import "SparkSetupUIElements.h"
+
+
 #ifdef FRAMEWORK
 #import <ParticleSDK/ParticleSDK.h>
+#import <OnePasswordExtension/OnePasswordExtension.h>
 #else
 #import "Spark-SDK.h"
+#import "OnePasswordExtension.h"
+//#import <1PasswordExtension/OnePasswordExtension.h>
 #endif
 #ifdef ANALYTICS
-#import "Mixpanel.h"
+#import "SEGAnalytics.h"
 #endif
 
 
@@ -31,9 +36,20 @@
 @property (strong, nonatomic) UIAlertView *skipAuthAlertView;
 @property (weak, nonatomic) IBOutlet SparkSetupUISpinner *spinner;
 @property (weak, nonatomic) IBOutlet SparkSetupUIButton *skipAuthButton;
+@property (weak, nonatomic) IBOutlet UIButton *onePasswordButton;
+
+
 @end
 
 @implementation SparkUserLoginViewController
+
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -63,6 +79,11 @@
     self.passwordTextField.font = [UIFont fontWithName:[SparkSetupCustomization sharedInstance].normalTextFontName size:16.0];
 
     self.skipAuthButton.hidden = !([SparkSetupCustomization sharedInstance].allowSkipAuthentication);
+    [self.onePasswordButton setHidden:![[OnePasswordExtension sharedExtension] isAppExtensionAvailable]];
+    if (!self.onePasswordButton.hidden) {
+        self.onePasswordButton.hidden = ![SparkSetupCustomization sharedInstance].allowPasswordManager;
+    }
+    
 
 }
 
@@ -80,6 +101,21 @@
     // Pass the selected object to the new view controller.
 }
 */
+
+- (IBAction)onePasswordButtonTapped:(id)sender {
+    [[OnePasswordExtension sharedExtension] findLoginForURLString:@"https://login.particle.io" forViewController:self sender:sender completion:^(NSDictionary *loginDictionary, NSError *error) {
+        if (loginDictionary.count == 0) {
+            if (error.code != AppExtensionErrorCodeCancelledByUser) {
+                NSLog(@"Error invoking 1Password App Extension for find login: %@", error);
+            }
+            return;
+        }
+        
+        self.emailTextField.text = loginDictionary[AppExtensionUsernameKey];
+        self.passwordTextField.text = loginDictionary[AppExtensionPasswordKey];
+    }];
+    
+}
 
 
 -(BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -106,7 +142,7 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Auth: Login Screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Auth: Login Screen"];
 #endif
 }
 
@@ -132,7 +168,7 @@
              if (!error)
              {
 #ifdef ANALYTICS
-                 [[Mixpanel sharedInstance] track:@"Auth: Login success"];
+                 [[SEGAnalytics sharedAnalytics] track:@"Auth: Login success"];
 #endif
 
                  // dismiss modal view and call main controller delegate to go on to setup process since login is complete
@@ -144,7 +180,7 @@
              {
                  NSString *errorText;
 #ifdef ANALYTICS
-                 [[Mixpanel sharedInstance] track:@"Auth: Login failure"];
+                 [[SEGAnalytics sharedAnalytics] track:@"Auth: Login failure"];
 #endif
 
 //                 if ([error.localizedDescription containsString:@"(400)"]) // TODO: fix this hack to something nicer
@@ -187,7 +223,7 @@
         if (buttonIndex == 0) //YES
         {
 #ifdef ANALYTICS
-            [[Mixpanel sharedInstance] track:@"Auth: Auth skipped"];
+            [[SEGAnalytics sharedAnalytics] track:@"Auth: Auth skipped"];
 #endif
             [self.delegate didFinishUserAuthentication:self loggedIn:NO];
         }

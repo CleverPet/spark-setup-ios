@@ -20,7 +20,7 @@
 #import "SparkSetupResultViewController.h"
 #import "SparkSetupCustomization.h"
 #ifdef ANALYTICS
-#import <Mixpanel.h>
+#import <SEGAnalytics.h>
 #endif
 
 
@@ -45,11 +45,23 @@
 @implementation SparkGetReadyViewController
 
 
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+}
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     self.brandImageView.image = [SparkSetupCustomization sharedInstance].brandImage;
     self.brandImageView.backgroundColor = [SparkSetupCustomization sharedInstance].brandImageBackgroundColor;
+    
+    UIColor *navBarButtonsColor = ([SparkSetupCustomization sharedInstance].lightStatusAndNavBar) ? [UIColor whiteColor] : [UIColor blackColor];
+    [self.cancelSetupButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
+    [self.logoutButton setTitleColor:navBarButtonsColor forState:UIControlStateNormal];
+    
     if ([SparkSetupCustomization sharedInstance].productImage)
         self.productImageView.image = [SparkSetupCustomization sharedInstance].productImage;
 
@@ -149,7 +161,13 @@
             }
             else
             {
-                NSString *errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Make sure your iOS device is connected to the internet and retry.\n\n(%@)",error.localizedDescription];
+                NSString *errStr;
+                if ([SparkSetupCustomization sharedInstance].productMode) {
+                    errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Are you sure your organization and product slugs are setup correctly?\n\n%@",error.localizedDescription];
+                } else {
+                    errStr = [NSString stringWithFormat:@"Could not communicate with Particle cloud. Make sure your iOS device is connected to the internet and retry.\n\n%@",error.localizedDescription];
+                }
+                
                 UIAlertView *errorAlertView = [[UIAlertView alloc] initWithTitle:@"Error" message:errStr delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                 errorAlertView.delegate = self;
                 [errorAlertView show];
@@ -159,9 +177,9 @@
     
     if ([SparkCloud sharedInstance].isAuthenticated)
     {
-        if ([SparkSetupCustomization sharedInstance].organization)
+        if ([SparkSetupCustomization sharedInstance].productMode)
         {
-            [[SparkCloud sharedInstance] generateClaimCodeForOrganization:[SparkSetupCustomization sharedInstance].organizationSlug andProduct:[SparkSetupCustomization sharedInstance].productSlug withActivationCode:nil completion:claimCodeCompletionBlock];
+            [[SparkCloud sharedInstance] generateClaimCodeForProduct:[SparkSetupCustomization sharedInstance].productId completion:claimCodeCompletionBlock];
         }
         else
         {
@@ -180,7 +198,8 @@
 -(void)viewWillAppear:(BOOL)animated
 {
 #ifdef ANALYTICS
-    [[Mixpanel sharedInstance] track:@"Device Setup: Get ready screen"];
+    [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Get ready screen"];
+//    NSLog(@"analytics enabled");
 #endif
 }
 

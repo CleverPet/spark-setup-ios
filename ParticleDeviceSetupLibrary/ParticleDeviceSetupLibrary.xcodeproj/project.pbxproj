@@ -57,8 +57,9 @@
 		5038C5A41CA21E750084D255 /* SparkSetupMainController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5038C5731CA21E750084D255 /* SparkSetupMainController.m */; };
 		5038C5B51CA22D9C0084D255 /* setup.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5038C5B41CA22D9C0084D255 /* setup.xcassets */; };
 		5038C5B71CA22DA20084D255 /* setup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5038C5B61CA22DA20084D255 /* setup.storyboard */; };
-		50A6F8591CADF4B0000024A8 /* AFNetworking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A6F8571CADF4B0000024A8 /* AFNetworking.framework */; };
-		50A6F85A1CADF4B0000024A8 /* ParticleSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A6F8581CADF4B0000024A8 /* ParticleSDK.framework */; };
+		50D43B8A1E8D9B66007DC41F /* ParticleSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50D43B871E8D9B66007DC41F /* ParticleSDK.framework */; };
+		50D43B8B1E8D9B66007DC41F /* OnePasswordExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50D43B881E8D9B66007DC41F /* OnePasswordExtension.framework */; };
+		50D43B8C1E8D9B66007DC41F /* AFNetworking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50D43B891E8D9B66007DC41F /* AFNetworking.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,8 +116,9 @@
 		5038C5B41CA22D9C0084D255 /* setup.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = setup.xcassets; path = ../../Resources/setup.xcassets; sourceTree = "<group>"; };
 		5038C5B61CA22DA20084D255 /* setup.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = setup.storyboard; path = ../../Resources/setup.storyboard; sourceTree = "<group>"; };
 		50A6F8511CADE934000024A8 /* Cartfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Cartfile; path = ../Cartfile; sourceTree = "<group>"; };
-		50A6F8571CADF4B0000024A8 /* AFNetworking.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AFNetworking.framework; sourceTree = "<group>"; };
-		50A6F8581CADF4B0000024A8 /* ParticleSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParticleSDK.framework; sourceTree = "<group>"; };
+		50D43B871E8D9B66007DC41F /* ParticleSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ParticleSDK.framework; path = ../Carthage/Build/iOS/ParticleSDK.framework; sourceTree = "<group>"; };
+		50D43B881E8D9B66007DC41F /* OnePasswordExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OnePasswordExtension.framework; path = ../Carthage/Build/iOS/OnePasswordExtension.framework; sourceTree = "<group>"; };
+		50D43B891E8D9B66007DC41F /* AFNetworking.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AFNetworking.framework; path = ../Carthage/Build/iOS/AFNetworking.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,8 +126,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50A6F8591CADF4B0000024A8 /* AFNetworking.framework in Frameworks */,
-				50A6F85A1CADF4B0000024A8 /* ParticleSDK.framework in Frameworks */,
+				50D43B8B1E8D9B66007DC41F /* OnePasswordExtension.framework in Frameworks */,
+				50D43B8C1E8D9B66007DC41F /* AFNetworking.framework in Frameworks */,
+				50D43B8A1E8D9B66007DC41F /* ParticleSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,9 +138,10 @@
 		5038C5241CA21D190084D255 = {
 			isa = PBXGroup;
 			children = (
+				50D43B871E8D9B66007DC41F /* ParticleSDK.framework */,
+				50D43B881E8D9B66007DC41F /* OnePasswordExtension.framework */,
+				50D43B891E8D9B66007DC41F /* AFNetworking.framework */,
 				50A6F8511CADE934000024A8 /* Cartfile */,
-				50A6F8571CADF4B0000024A8 /* AFNetworking.framework */,
-				50A6F8581CADF4B0000024A8 /* ParticleSDK.framework */,
 				5038C5301CA21D190084D255 /* ParticleDeviceSetupLibrary */,
 				5038C52F1CA21D190084D255 /* Products */,
 			);
@@ -320,7 +324,7 @@
 		5038C5251CA21D190084D255 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = Particle;
 				TargetAttributes = {
 					5038C52D1CA21D190084D255 = {
@@ -405,8 +409,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -454,8 +460,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -488,7 +496,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 0.4.0;
@@ -517,7 +525,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 0.4.0;
