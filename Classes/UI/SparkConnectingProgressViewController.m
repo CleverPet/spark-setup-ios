@@ -29,7 +29,7 @@ NSInteger const kMaxRetriesClaim = 15;
 NSInteger const kMaxRetriesConfigureAP = 5;
 NSInteger const kMaxRetriesConnectAP = 5;
 NSInteger const kMaxRetriesReachability = 5;
-NSInteger const kWaitForCloudConnectionTime = 1;
+NSInteger const kWaitForCloudConnectionTime = 3;
 
 typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
     SparkSetupConnectionProgressStateConfigureCredentials = 0,
@@ -449,7 +449,7 @@ typedef NS_ENUM(NSInteger, SparkSetupConnectionProgressState) {
                 self.setupResult = SparkSetupMainControllerResultSuccess;
             }
             
-            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC);
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC);
             dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
                 [self performSegueWithIdentifier:@"done" sender:self];
             });
