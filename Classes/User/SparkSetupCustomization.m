@@ -89,9 +89,14 @@
         //self.organizationName = @"Particle";
         //self.productSlug = @"photon";
         self.productName = @"CleverPet Hub";
+        // ID is only used if product mode is enabled
+        // Product mode seems to be a new feature added after out initial integration
         self.productId = 0;
         self.productMode = NO;
         
+        // Password manager is only used if users sign in directly to Particle, which we do not
+        // Users can still get in to an error state where they will be asked to login
+        // TODO: prevent users from being asked to log in to Particle
         self.allowPasswordManager = YES;
 
         self.allowSkipAuthentication = NO;
