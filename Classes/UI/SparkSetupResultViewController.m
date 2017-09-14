@@ -152,7 +152,7 @@
         {
             self.setupResultImageView.image = [SparkSetupMainController loadImageFromResourceBundle:@"failure"];
             self.shortMessageLabel.text = @"Error!";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 7\n\nStill having trouble?";
             
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Success" properties:@{@"reason":@"device offline"}];
@@ -164,7 +164,7 @@
         {
             self.setupResultImageView.image = [SparkSetupMainController loadImageFromResourceBundle:@"failure"];
             self.shortMessageLabel.text = @"Error!";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 2\n\nStill having trouble?";
             
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Success" properties:@{@"reason":@"not claimed"}];
@@ -179,7 +179,7 @@
             self.shortMessageLabel.text = @"Error!";
             // TODO: add customization point for custom troubleshoot texts
 //            self.longMessageLabel.text = @"Setup process failed at claiming your {device}, if your {device} LED is blinking in blue or green this means that you provided wrong Wi-Fi credentials. If {device} LED is breathing cyan an internal cloud issue occured - please contact product support.";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 3\n\nStill having trouble?";
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Failure" properties:@{@"reason":@"claiming failed"}];
 #endif
@@ -191,7 +191,7 @@
         {
             self.setupResultImageView.image = [SparkSetupMainController loadImageFromResourceBundle:@"failure"];
             self.shortMessageLabel.text = @"Error!";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 5\n\nStill having trouble?";
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Failure" properties:@{@"reason":@"cannot disconnect"}];
 #endif
@@ -204,7 +204,7 @@
         {
             self.setupResultImageView.image = [SparkSetupMainController loadImageFromResourceBundle:@"failure"];
             self.shortMessageLabel.text = @"Error!";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 4\n\nStill having trouble?";
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Failure" properties:@{@"reason":@"cannot configure"}];
 #endif
@@ -215,7 +215,7 @@
         {
             self.setupResultImageView.image = [SparkSetupMainController loadImageFromResourceBundle:@"failure"];
             self.shortMessageLabel.text = @"Error!";
-            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nStill having trouble?";
+            self.longMessageLabel.text = @"Your Hub couldn’t connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?\n\nTo try setup again: a) remove the Hub dome b) unplug the Hub and plug it back in c) touch the center touchpad three times and d) place the dome back on the Hub base. When the light on the Hub dome flashes blue, press Continue.\n\nError code: 6\n\nStill having trouble?";
 #ifdef ANALYTICS
             [[SEGAnalytics sharedAnalytics] track:@"Device Setup: Failure" properties:@{@"reason":@"lost connection"}];
 #endif
