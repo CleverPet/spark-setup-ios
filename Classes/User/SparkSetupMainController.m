@@ -28,7 +28,7 @@ NSString *const kSparkSetupDidFinishDeviceKey = @"kSparkSetupDidFinishDeviceKey"
 NSString *const kSparkSetupDidLogoutNotification = @"kSparkSetupDidLogoutNotification";
 NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey";
 
-@interface SparkSetupMainController() <SparkUserLoginDelegate>
+@interface SparkSetupMainController() <SparkUserLoginDelegate, UIAlertViewDelegate>
 
 //@property (nonatomic, strong) UINavigationController *setupNavController;
 @property (weak, nonatomic) IBOutlet UIView *containerView;
@@ -141,21 +141,29 @@ NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey"
     [self showViewController:setupVC];
 }
 
+// These two methods are what activates the login flow
 -(void)showSignup
 {
-    SparkUserSignupViewController *signupVC = [[SparkSetupMainController getSetupStoryboard] instantiateViewControllerWithIdentifier:@"signup"];
+    NSString *messageStr = [NSString stringWithFormat:@"We’re having trouble fetching your account data. Please email support@clever.pet or send us an in-app chat and we’ll get this sorted out as soon as possible."];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Oops!" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Go Back",nil];
+    [alert show];
+    /*SparkUserSignupViewController *signupVC = [[SparkSetupMainController getSetupStoryboard] instantiateViewControllerWithIdentifier:@"signup"];
     signupVC.delegate = self;
-    [self showViewController:signupVC];
+    [self showViewController:signupVC];*/
 }
 
 
 -(void)showSignupWithPredefinedActivationCode:(NSString *)activationCode;
 {
+    NSString *messageStr = [NSString stringWithFormat:@"We’re having trouble fetching your account data. Please email support@clever.pet or send us an in-app chat and we’ll get this sorted out as soon as possible."];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Oops!" message:messageStr delegate:self cancelButtonTitle:nil otherButtonTitles:@"Go Back",nil];
     // __deprecated
-    SparkUserSignupViewController *signupVC = [[SparkSetupMainController getSetupStoryboard] instantiateViewControllerWithIdentifier:@"signup"];
+    /*SparkUserSignupViewController *signupVC = [[SparkSetupMainController getSetupStoryboard] instantiateViewControllerWithIdentifier:@"signup"];
 //    signupVC.predefinedActivationCode = activationCode;
     signupVC.delegate = self;
-    [self showViewController:signupVC];
+    [self showViewController:signupVC];*/
 }
 
 
@@ -279,6 +287,10 @@ NSString *const kSparkSetupDidFailDeviceIDKey = @"kSparkSetupDidFailDeviceIDKey"
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kSparkSetupDidFinishNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kSparkSetupDidLogoutNotification object:nil];
 
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:kSparkSetupDidFinishNotification object:nil userInfo:@{kSparkSetupDidFinishStateKey:@(SparkSetupMainControllerResultUserCancel)}];
 }
 
 
