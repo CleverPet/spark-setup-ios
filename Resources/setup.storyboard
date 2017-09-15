@@ -3410,8 +3410,9 @@
                                     </mask>
                                 </variation>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You successfully setup you device! hooray!" lineBreakMode="wordWrap" numberOfLines="18" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nUz-dW-L6z" customClass="SparkSetupUILabel">
-                                <rect key="frame" x="16" y="241" width="343" height="18"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="wordWrap" numberOfLines="18" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nUz-dW-L6z" customClass="SparkSetupUILabel">
+                                <rect key="frame" x="16" y="241" width="343" height="107.5"/>
+                                <string key="text">Your Hub couldn't connect to WiFi. Is the WiFi signal where you put the Hub strong enough? Did you enter your WiFi password correctly?  To try setup again, click 'Done' and follow the instructions on the next page.</string>
                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
@@ -3473,7 +3474,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name your new device:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jkc-Z7-m2G" customClass="SparkSetupUILabel">
-                                <rect key="frame" x="16" y="275" width="160" height="18"/>
+                                <rect key="frame" x="16" y="364.5" width="160" height="18"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
@@ -3482,7 +3483,7 @@
                                 </userDefinedRuntimeAttributes>
                             </label>
                             <textField opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Device name" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="EJc-jb-tti">
-                                <rect key="frame" x="16" y="301" width="343" height="36"/>
+                                <rect key="frame" x="16" y="390.5" width="343" height="36"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="0.90000000000000002" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="32" id="HiI-sY-9bp">
@@ -3506,8 +3507,8 @@
                                 </variation>
                             </textField>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RLR-be-C5c">
-                                <rect key="frame" x="63.5" y="561" width="249" height="30"/>
-                                <state key="normal" title="Find more troubleshooting tips here."/>
+                                <rect key="frame" x="16" y="348.5" width="286" height="30"/>
+                                <state key="normal" title="[Still having trouble? Find more tips here.]"/>
                                 <connections>
                                     <action selector="cleverpetTroubleshootingButtonPressed:" destination="fH1-BW-ERq" eventType="touchUpInside" id="pDZ-KN-4vb"/>
                                 </connections>
@@ -3515,16 +3516,16 @@
                         </subviews>
                         <color key="backgroundColor" red="0.95564913749694824" green="0.95562052726745605" blue="0.95563679933547974" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="RLR-be-C5c" firstAttribute="top" secondItem="nUz-dW-L6z" secondAttribute="bottom" id="5zO-6s-tZW"/>
                             <constraint firstItem="nUz-dW-L6z" firstAttribute="top" secondItem="ywE-ZV-rVm" secondAttribute="bottom" constant="16" id="7w6-rj-pgc"/>
                             <constraint firstItem="dxu-kn-9q9" firstAttribute="top" secondItem="4qS-vF-byz" secondAttribute="top" id="8aA-R0-N5y"/>
                             <constraint firstItem="ywE-ZV-rVm" firstAttribute="leading" secondItem="4qS-vF-byz" secondAttribute="leadingMargin" id="AWe-1M-kzI"/>
+                            <constraint firstItem="RLR-be-C5c" firstAttribute="leading" secondItem="nUz-dW-L6z" secondAttribute="leading" id="Aob-dA-asr"/>
                             <constraint firstItem="vtn-Ip-3FT" firstAttribute="bottom" secondItem="nUz-dW-L6z" secondAttribute="bottom" constant="471" id="GuY-l5-0uf"/>
                             <constraint firstAttribute="centerX" secondItem="vtn-Ip-3FT" secondAttribute="centerX" id="Ijg-ta-hZo"/>
                             <constraint firstAttribute="centerX" secondItem="48y-vy-AG6" secondAttribute="centerX" id="KMj-6N-Aqi"/>
                             <constraint firstItem="vtn-Ip-3FT" firstAttribute="top" secondItem="YZM-QG-orr" secondAttribute="bottom" constant="8" id="Kpe-Cs-1JY"/>
-                            <constraint firstItem="vtn-Ip-3FT" firstAttribute="centerX" secondItem="RLR-be-C5c" secondAttribute="centerX" id="LVz-mi-kl8"/>
                             <constraint firstAttribute="centerX" secondItem="ywE-ZV-rVm" secondAttribute="centerX" id="QOS-GM-AGF"/>
-                            <constraint firstItem="RLR-be-C5c" firstAttribute="bottom" secondItem="vtn-Ip-3FT" secondAttribute="top" constant="-16" id="WDA-WI-jBE"/>
                             <constraint firstItem="dxu-kn-9q9" firstAttribute="leading" secondItem="4qS-vF-byz" secondAttribute="leading" id="X69-Aa-m3F"/>
                             <constraint firstAttribute="trailing" secondItem="dxu-kn-9q9" secondAttribute="trailing" id="Zx6-yd-lcm"/>
                             <constraint firstItem="ywE-ZV-rVm" firstAttribute="top" secondItem="48y-vy-AG6" secondAttribute="bottom" constant="8" id="buj-zS-anR">
