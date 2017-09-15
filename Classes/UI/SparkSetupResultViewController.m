@@ -32,7 +32,8 @@
 @property (weak, nonatomic) IBOutlet SparkSetupUILabel *nameDeviceLabel;
 @property (weak, nonatomic) IBOutlet UITextField *nameDeviceTextField;
 @property (strong, nonatomic) NSArray *randomDeviceNamesArray;
-@property (weak, nonatomic) IBOutlet SparkSetupUIButton *troubleshootingButton;
+@property (weak, nonatomic) IBOutlet UIButton *troubleshootingButton;
+
 @property (nonatomic) BOOL deviceNamed;
 @end
 
