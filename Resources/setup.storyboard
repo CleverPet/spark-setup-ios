@@ -3507,8 +3507,8 @@
                                 </variation>
                             </textField>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RLR-be-C5c">
-                                <rect key="frame" x="16" y="348.5" width="286" height="30"/>
-                                <state key="normal" title="[Still having trouble? Find more tips here.]"/>
+                                <rect key="frame" x="16" y="364.5" width="275" height="30"/>
+                                <state key="normal" title="Still having trouble? Find more tips here."/>
                                 <connections>
                                     <action selector="cleverpetTroubleshootingButtonPressed:" destination="fH1-BW-ERq" eventType="touchUpInside" id="pDZ-KN-4vb"/>
                                 </connections>
@@ -3516,7 +3516,7 @@
                         </subviews>
                         <color key="backgroundColor" red="0.95564913749694824" green="0.95562052726745605" blue="0.95563679933547974" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="RLR-be-C5c" firstAttribute="top" secondItem="nUz-dW-L6z" secondAttribute="bottom" id="5zO-6s-tZW"/>
+                            <constraint firstItem="RLR-be-C5c" firstAttribute="top" secondItem="nUz-dW-L6z" secondAttribute="bottom" constant="16" id="5zO-6s-tZW"/>
                             <constraint firstItem="nUz-dW-L6z" firstAttribute="top" secondItem="ywE-ZV-rVm" secondAttribute="bottom" constant="16" id="7w6-rj-pgc"/>
                             <constraint firstItem="dxu-kn-9q9" firstAttribute="top" secondItem="4qS-vF-byz" secondAttribute="top" id="8aA-R0-N5y"/>
                             <constraint firstItem="ywE-ZV-rVm" firstAttribute="leading" secondItem="4qS-vF-byz" secondAttribute="leadingMargin" id="AWe-1M-kzI"/>
